@@ -1,0 +1,40 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Reviewer name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Reviewer email"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Rating from 1 to 5",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "review_text": {
+      "type": "string",
+      "description": "Review content"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Review approval status"
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "rating",
+    "review_text"
+  ]
+}
