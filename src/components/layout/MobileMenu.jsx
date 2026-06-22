@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../../utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Home, Image, Phone, ShoppingBag, Star, User, MessageSquare } from 'lucide-react';
+import { Menu, X, Home, Image, Phone, ShoppingBag, Star, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MobileMenu({ user }) {
@@ -13,7 +13,6 @@ export default function MobileMenu({ user }) {
     { name: 'About', path: 'About', icon: User },
     { name: 'Gallery', path: 'Gallery', icon: Image },
     { name: 'Reviews', path: 'Reviews', icon: Star },
-    { name: 'Testimonials', path: 'Testimonials', icon: MessageSquare },
     { name: 'Contact', path: 'Contact', icon: Phone },
   ];
 

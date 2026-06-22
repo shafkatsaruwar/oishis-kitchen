@@ -48,7 +48,6 @@ function LayoutContent({ children, currentPageName }) {
                 { label: 'About', page: 'About' },
                 { label: 'Gallery', page: 'Gallery' },
                 { label: 'Reviews', page: 'Reviews' },
-                { label: 'Testimonials', page: 'Testimonials' },
                 { label: 'Contact', page: 'Contact' },
               ].map(({ label, page }) => (
                 <Link
