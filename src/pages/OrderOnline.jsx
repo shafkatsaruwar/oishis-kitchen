@@ -28,6 +28,7 @@ const menuCategories = [
     { name: 'Lamb/Kacchi', price: 14.99 },
     { name: 'Morog Polao', price: 8.99 }],
     trayOptions: [
+    { name: 'Chicken Biryani', label: 'Full Tray', price: 170 },
     { name: 'Beef Tehari', label: 'Full Tray', price: 190 },
     { name: 'Beef Kacchi', label: 'Full Tray', price: 260 },
     { name: 'Mutton Kacchi', label: 'Full Tray', price: 290 }]
