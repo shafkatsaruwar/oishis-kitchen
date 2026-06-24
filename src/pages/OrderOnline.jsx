@@ -26,7 +26,11 @@ const menuCategories = [
     { name: 'Chicken', price: 7.99 },
     { name: 'Beef', price: 11.99 },
     { name: 'Lamb/Kacchi', price: 14.99 },
-    { name: 'Morog Polao', price: 8.99 }]
+    { name: 'Morog Polao', price: 8.99 }],
+    trayOptions: [
+    { name: 'Beef Tehari', label: 'Full Tray', price: 190 },
+    { name: 'Beef Kacchi', label: 'Full Tray', price: 260 },
+    { name: 'Mutton Kacchi', label: 'Full Tray', price: 290 }]
   },
   {
     name: 'Biryani Big Tray (~20 people)',
@@ -73,18 +77,16 @@ const menuCategories = [
     options: [
     { name: 'Regular', price: 4.99 },
     { name: 'With Potatoes', price: 6.50 },
-    { name: 'Per Pound', price: 12.99 }]
+    { name: 'Per Pound', price: 12.99 }],
+    trayOptions: [
+    { name: 'Beef Curry', label: 'Full Tray', price: 240 }]
   },
   {
     name: 'Chicken Roast',
-    description: 'Perfectly spiced chicken pieces in rich gravy. Minimum quantity is 4.',
-    price: 3.99,
-    minQty: 4,
+    description: 'Perfectly spiced chicken pieces in rich gravy. $3.25 per piece. Minimum 8 pieces.',
+    price: 3.25,
+    minQty: 8,
     spice: 2,
-    options: [
-    { name: 'Whole Leg & Thigh', price: 8.99 },
-    { name: 'Thigh', price: 3.99 },
-    { name: 'Leg', price: 3.99 }]
   },
   {
     name: 'Chicken Yellow Curry',
@@ -103,7 +105,16 @@ const menuCategories = [
   { name: 'Fish Curry w/ Vegetables', description: 'Fish curry with cauliflower, eggplant, and potatoes.', price: 7.49, minQty: 8, spice: 2 },
   { name: 'Kachki Mach', description: 'Small fish curry - Bengali specialty.', price: 2.99, minQty: 8, spice: 2 },
   { name: 'Daal', description: 'Home-style lentils. Price is $2.99. Minimum quantity is 4.', price: 2.99, minQty: 4, spice: 1 },
-  { name: 'Mixed Vegetable', description: 'Seasonal vegetables in light curry. Minimum quantity 4.', price: 3.99, minQty: 4, spice: 1 }]
+  {
+    name: 'Mixed Vegetable',
+    description: 'Seasonal vegetables in light curry. Minimum quantity 4.',
+    price: 3.99,
+    minQty: 4,
+    spice: 1,
+    trayOptions: [
+    { name: 'Mixed Vegetable', label: 'Full Tray', price: 120 },
+    { name: 'Mixed Vegetable', label: 'Half Tray', price: 60 }]
+  }]
 },
 {
   category: 'Kebabs & Grilled',
@@ -117,8 +128,8 @@ const menuCategories = [
     minQty: 8,
     spice: 2,
     options: [
-    { name: 'Chicken Kebab', price: 2.25 },
-    { name: 'Shami Kebab', price: 4.99 },
+    { name: 'Chicken Shami Kebab', price: 2.25 },
+    { name: 'Beef Shami Kebab', price: 2.75 },
     { name: 'Tuna Kebab', price: 1.99 },
     { name: 'Chicken Boti Kebab', price: 8.99 }]
   }]
