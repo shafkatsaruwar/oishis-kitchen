@@ -64,6 +64,12 @@ export default function Checkout() {
       return;
     }
 
+    const belowMinimum = cart.filter(item => item.minQty && item.quantity < item.minQty);
+    if (belowMinimum.length > 0) {
+      toast.error(`${belowMinimum[0].name} requires a minimum of ${belowMinimum[0].minQty}. Please update your cart.`);
+      return;
+    }
+
     if (!formData.pickup_date || !formData.pickup_time) {
       toast.error('Please select a pickup date and time');
       return;

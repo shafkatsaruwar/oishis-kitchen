@@ -68,7 +68,10 @@ export default function Cart() {
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-900 mb-1">{item.name}</h3>
                         <p className="text-lg text-amber-700 font-semibold">${item.price.toFixed(2)} each</p>
-                        {item.minQty > 1 && (
+                        {item.minQty > 1 && item.quantity < item.minQty && (
+                          <p className="text-sm text-red-500 font-semibold mt-1">⚠ Minimum order: {item.minQty}</p>
+                        )}
+                        {item.minQty > 1 && item.quantity >= item.minQty && (
                           <p className="text-sm text-gray-500 mt-1">Minimum quantity: {item.minQty}</p>
                         )}
                       </div>
