@@ -34,15 +34,6 @@ const menuCategories = [
     { name: 'Mutton Kacchi', label: 'Full Tray', price: 290 }]
   },
   {
-    name: 'Biryani Big Tray (~20 people)',
-    description: 'Perfect for events and large gatherings!',
-    price: 179.99,
-    minQty: 1,
-    spice: 2,
-    options: [
-    { name: 'Chicken', price: 179.99 }]
-  },
-  {
     name: 'Pulao',
     description: 'Fragrant spiced rice. Minimum quantity is 8.',
     price: 2.99,
