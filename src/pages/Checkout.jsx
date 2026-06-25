@@ -55,6 +55,21 @@ export default function Checkout() {
       return;
     }
 
+    if (!formData.customer_name.trim()) {
+      toast.error('Please enter your full name.');
+      return;
+    }
+
+    if (!formData.customer_email.trim()) {
+      toast.error('Please enter your email address.');
+      return;
+    }
+
+    if (!formData.customer_phone.trim()) {
+      toast.error('Please enter your phone number.');
+      return;
+    }
+
     const belowMinimum = cart.filter(item => item.minQty && item.quantity < item.minQty);
     if (belowMinimum.length > 0) {
       toast.error(`${belowMinimum[0].name} requires a minimum of ${belowMinimum[0].minQty}. Please update your cart.`);
@@ -62,7 +77,7 @@ export default function Checkout() {
     }
 
     if (!formData.pickup_date || !formData.pickup_time) {
-      toast.error('Please select a pickup date and time');
+      toast.error('Please select a pickup date and time.');
       return;
     }
 
@@ -201,7 +216,6 @@ export default function Checkout() {
                       <Label htmlFor="name">Full Name *</Label>
                       <Input
                         id="name"
-                        required
                         value={formData.customer_name}
                         onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
                         placeholder="Your full name"
@@ -214,7 +228,6 @@ export default function Checkout() {
                         <Input
                           id="email"
                           type="email"
-                          required
                           value={formData.customer_email}
                           onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
                           placeholder="your@email.com"
@@ -229,7 +242,6 @@ export default function Checkout() {
                         <Input
                           id="phone"
                           type="tel"
-                          required
                           value={formData.customer_phone}
                           onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
                           placeholder="(555) 000-0000"
