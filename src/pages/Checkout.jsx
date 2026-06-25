@@ -111,6 +111,7 @@ export default function Checkout() {
           items_list: cart.map(i => `${i.quantity}x ${i.name} — $${(i.price * i.quantity).toFixed(2)}`).join('\n'),
           payment_method: 'Pay on Pickup (Cash / Venmo / Zelle)',
           special_requests: formData.special_requests || 'None',
+          track_url: `${window.location.origin}/TrackOrder?orderNumber=${orderNumber}`,
         }, publicKey).catch(err => console.error('Email failed:', err));
       }
 
