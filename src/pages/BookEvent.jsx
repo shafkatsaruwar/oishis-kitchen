@@ -7,13 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Users, Sparkles, CheckCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export default function BookEvent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,31 +30,23 @@ export default function BookEvent() {
     setIsSubmitting(true);
 
     try {
-      await base44.integrations.Core.SendEmail({
-        to: 'oishiskitchen@gmail.com',
-        subject: `New Event Booking Request - ${formData.event_type}`,
-        body: `
-New Event Booking Request
+      const { error } = await supabase.from('event_requests').insert([{
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        event_type: formData.event_type,
+        event_date: formData.event_date,
+        guest_count: formData.guest_count,
+        budget: formData.budget,
+        message: formData.message
+      }]);
 
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
-
-Event Type: ${formData.event_type}
-Event Date: ${formData.event_date}
-Number of Guests: ${formData.guest_count}
-Budget: ${formData.budget}
-
-Message:
-${formData.message}
-
-Please contact them as soon as possible!
-        `
-      });
+      if (error) throw error;
 
       setSubmitted(true);
       toast.success('Event request submitted successfully!');
     } catch (error) {
+      console.error('Error submitting event request:', error);
       toast.error('Failed to submit request. Please try again or call us.');
     } finally {
       setIsSubmitting(false);

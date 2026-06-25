@@ -1,53 +1,44 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { Calendar, MapPin, Phone, Mail, ChevronRight, Package, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
 import { format } from 'date-fns';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function MyOrders() {
   const queryClient = useQueryClient();
-  
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    }
-  });
+  const navigate = useNavigate();
+  const { user, isLoadingAuth } = useAuth();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      const allOrders = await base44.entities.Order.filter(
-        { customer_email: user.email },
-        '-created_date'
-      );
-      return allOrders;
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_email', user.email)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
     },
     enabled: !!user?.email
   });
 
-  useEffect(() => {
-    const unsubscribe = base44.entities.Order.subscribe((event) => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    });
-    return unsubscribe;
-  }, [queryClient]);
-
   const cancelOrderMutation = useMutation({
     mutationFn: async (orderId) => {
-      await base44.entities.Order.update(orderId, { status: 'cancelled' });
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -60,7 +51,7 @@ export default function MyOrders() {
 
   const canCancelOrder = (order) => {
     if (order.status === 'cancelled' || order.status === 'completed') return false;
-    const orderTime = new Date(order.created_date).getTime();
+    const orderTime = new Date(order.created_at).getTime();
     const now = new Date().getTime();
     const twentyMinutes = 20 * 60 * 1000;
     return (now - orderTime) < twentyMinutes;
@@ -72,7 +63,7 @@ export default function MyOrders() {
     }
   };
 
-  if (userLoading) {
+  if (isLoadingAuth) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
@@ -95,13 +86,13 @@ export default function MyOrders() {
           <p className="text-xl text-gray-600 mb-8">
             Please log in to view your orders
           </p>
-          <Button
-            size="lg"
-            onClick={() => base44.auth.redirectToLogin(createPageUrl('MyOrders'))}
-            className="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700">
-
-            Log In / Sign Up
-          </Button>
+          <Link to={`${createPageUrl('Login')}?redirect=${createPageUrl('MyOrders')}`}>
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700">
+              Log In / Sign Up
+            </Button>
+          </Link>
         </motion.div>
       </div>);
   }
@@ -167,7 +158,7 @@ export default function MyOrders() {
                           <OrderStatusBadge status={order.status} />
                         </div>
                         <p className="text-sm text-gray-500">
-                          Placed on {format(new Date(order.created_date), 'MMM dd, yyyy - h:mm a')}
+                          Placed on {format(new Date(order.created_at), 'MMM dd, yyyy - h:mm a')}
                         </p>
                       </div>
                       <div className="text-right space-y-2">

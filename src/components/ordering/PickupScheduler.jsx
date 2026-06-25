@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, AlertCircle, CheckCircle, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, isAfter, isBefore } from 'date-fns';
 
 const MAX_ORDERS_PER_SLOT = 5; // Configurable capacity per time slot
@@ -35,7 +35,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
       const monthEnd = endOfMonth(currentMonth);
       
       // Fetch all orders for the current month
-      const orders = await base44.entities.Order.list();
+      const { data: orders = [] } = await supabase.from('orders').select('pickup_date, pickup_time');
       
       // Count bookings per date-time slot
       const counts = {};

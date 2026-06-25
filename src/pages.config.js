@@ -6,6 +6,7 @@ import Checkout from './pages/Checkout';
 import Contact from './pages/Contact';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import Menu from './pages/Menu';
 import MyOrders from './pages/MyOrders';
 import OrderConfirmation from './pages/OrderConfirmation';
@@ -24,6 +25,7 @@ export const PAGES = {
     "Contact": Contact,
     "Gallery": Gallery,
     "Home": Home,
+    "Login": Login,
     "Menu": Menu,
     "MyOrders": MyOrders,
     "OrderConfirmation": OrderConfirmation,

@@ -8,28 +8,18 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CheckCircle, AlertCircle, UserPlus, LogIn } from 'lucide-react';
 import { useCart } from '../components/ordering/CartContext';
-import { base44 } from '@/api/base44Client';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 import PickupScheduler from '../components/ordering/PickupScheduler';
-import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Checkout() {
   const { cart, getCartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    }
-  });
+  const { user } = useAuth();
 
   const TAX_RATE = 0.0625;
   const subtotal = getCartTotal();
@@ -50,7 +40,7 @@ export default function Checkout() {
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        customer_name: user.full_name || '',
+        customer_name: user.user_metadata?.full_name || '',
         customer_email: user.email || ''
       }));
     }
@@ -88,7 +78,8 @@ export default function Checkout() {
         items: cart.map((item) => ({
           name: item.name,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          special_instructions: item.special_instructions || ''
         })),
         subtotal: subtotal,
         tax: tax,
@@ -101,38 +92,8 @@ export default function Checkout() {
         payment_status: formData.payment_method === 'pay_on_pickup' ? 'pending' : 'paid'
       };
 
-      await base44.entities.Order.create(orderData);
-
-      // Send confirmation email
-      await base44.integrations.Core.SendEmail({
-        to: formData.customer_email,
-        subject: `Order Confirmation - ${orderNumber}`,
-        body: `
-          Dear ${formData.customer_name},
-          
-          Thank you for your order! We've received your order and will have it ready for pickup.
-          
-          Order Number: ${orderNumber}
-          Pickup Date: ${formData.pickup_date}
-          Pickup Time: ${formData.pickup_time}
-          Total Amount: $${total.toFixed(2)}
-          
-          Order Details:
-          ${cart.map((item) => `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toFixed(2)})`).join('\n')}
-          
-          Payment: ${formData.payment_method === 'pay_on_pickup' ? 'Pay on Pickup' : 'Paid Online'}
-          
-          ${formData.special_requests ? `Special Requests: ${formData.special_requests}` : ''}
-          
-          We'll call you if there are any issues with your order.
-          
-          Pickup Location: 21 Concord St, Malden, MA 02148
-          Phone: 781-579-4965
-          
-          With love,
-          Oishi's Kitchen
-        `
-      });
+      const { error } = await supabase.from('orders').insert([orderData]);
+      if (error) throw error;
 
       clearCart();
       navigate(createPageUrl('OrderConfirmation') + `?orderNumber=${orderNumber}`);
@@ -163,7 +124,7 @@ export default function Checkout() {
           </h1>
           <p className="text-xl text-gray-700 mb-8">Complete your order for pickup</p>
 
-          {!user && !userLoading &&
+          {!user &&
           <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg mb-8">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -176,13 +137,12 @@ export default function Checkout() {
                       </p>
                     </div>
                   </div>
-                  <Button
-                  onClick={() => base44.auth.redirectToLogin(window.location.pathname + window.location.search)}
-                  className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap">
-
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Log In (Optional)
-                  </Button>
+                  <Link to={`${createPageUrl('Login')}?redirect=${createPageUrl('Checkout')}`}>
+                    <Button className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Log In (Optional)
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

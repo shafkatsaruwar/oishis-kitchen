@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../../utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Home, Image, Phone, ShoppingBag, Star, User } from 'lucide-react';
+import { Menu, X, Home, Image, Phone, ShoppingBag, Star, User, LogOut, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function MobileMenu({ user }) {
+export default function MobileMenu({ user, isAdmin, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
@@ -59,14 +59,42 @@ export default function MobileMenu({ user }) {
                     </Link>
                   );
                 })}
-                {user && (
+                {user ? (
+                  <>
+                    <Link
+                      to={createPageUrl('MyOrders')}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4 border-b border-gray-200"
+                    >
+                      <ShoppingBag className="w-5 h-5" />
+                      <span className="font-medium">My Orders</span>
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to={createPageUrl('AdminOrders')}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4 border-b border-gray-200"
+                      >
+                        <Settings className="w-5 h-5" />
+                        <span className="font-medium">Manage Orders</span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => { setIsOpen(false); onLogout(); }}
+                      className="w-full flex items-center gap-3 text-red-500 hover:bg-red-50 transition-colors py-3 px-4"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium">Log Out</span>
+                    </button>
+                  </>
+                ) : (
                   <Link
-                    to={createPageUrl('MyOrders')}
+                    to={createPageUrl('Login')}
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4 border-b border-gray-200 last:border-b-0"
+                    className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4"
                   >
-                    <ShoppingBag className="w-5 h-5" />
-                    <span className="font-medium">My Orders</span>
+                    <User className="w-5 h-5" />
+                    <span className="font-medium">Log In</span>
                   </Link>
                 )}
               </nav>

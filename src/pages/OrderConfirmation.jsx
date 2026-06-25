@@ -97,14 +97,14 @@ export default function OrderConfirmation() {
                     <MapPin className="w-5 h-5 text-gray-600" />
                     <div>
                       <p className="font-semibold text-gray-900">Location</p>
-                      <p className="text-sm text-gray-600">[Your Address Here]</p>
+                      <p className="text-sm text-gray-600">21 Concord St, Malden, MA 02148</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="w-5 h-5 text-gray-600" />
                     <div>
                       <p className="font-semibold text-gray-900">Phone</p>
-                      <p className="text-sm text-gray-600">(555) 123-4567</p>
+                      <p className="text-sm text-gray-600">781-579-4965</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

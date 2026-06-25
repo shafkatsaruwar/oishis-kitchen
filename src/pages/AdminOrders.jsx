@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
 import { Calendar, Phone, Mail, Package, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
@@ -17,70 +17,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function AdminOrders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const queryClient = useQueryClient();
-
-  const { data: user } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    },
-  });
+  const { user } = useAuth();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
-      const allOrders = await base44.entities.Order.list('-created_date');
-      return allOrders;
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
     },
+    enabled: user?.email === ADMIN_EMAIL,
   });
-
-  const statusMessages = {
-    confirmed: 'Great news! Your order has been confirmed and we are preparing to start cooking.',
-    preparing: 'Your order is now being prepared fresh for you!',
-    ready: '🎉 Your order is ready for pickup! Please come to 21 Concord St, Malden, MA 02148.',
-    completed: 'Thank you! Your order has been marked as completed. We hope you enjoyed the food!',
-    cancelled: 'We\'re sorry, but your order has been cancelled. Please call us at 781-579-4965 if you have questions.',
-  };
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ orderId, newStatus, order }) => {
-      await base44.entities.Order.update(orderId, { status: newStatus });
-      if (statusMessages[newStatus] && order?.customer_email) {
-        await base44.integrations.Core.SendEmail({
-          to: order.customer_email,
-          subject: `Order Update: #${order.order_number} is now ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
-          body: `Dear ${order.customer_name},\n\n${statusMessages[newStatus]}\n\nOrder #${order.order_number}\nPickup: ${order.pickup_date} at ${order.pickup_time}\nTotal: $${order.total?.toFixed(2)}\n\nWith love,\nOishi's Kitchen\n📞 781-579-4965`
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast.success('Order status updated & customer notified!');
-    },
-    onError: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast.success('Order status updated!');
-    }
-  });
-
-  const filteredOrders = orders?.filter(order => {
-    const matchesSearch = 
-      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer_email?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  }) || [];
 
   const statusOptions = [
     { value: 'pending', label: 'Pending' },
@@ -91,15 +47,36 @@ export default function AdminOrders() {
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ orderId, newStatus }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast.success('Order status updated!');
+    },
+    onError: () => {
+      toast.error('Failed to update order status');
+    }
+  });
+
+  const filteredOrders = orders?.filter(order => {
+    const matchesSearch =
+      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer_email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  }) || [];
+
   const getStatusCounts = () => {
-    const counts = {
-      pending: 0,
-      confirmed: 0,
-      preparing: 0,
-      ready: 0,
-      completed: 0,
-      cancelled: 0,
-    };
+    const counts = { pending: 0, confirmed: 0, preparing: 0, ready: 0, completed: 0, cancelled: 0 };
     orders?.forEach(order => {
       counts[order.status] = (counts[order.status] || 0) + 1;
     });
@@ -108,7 +85,7 @@ export default function AdminOrders() {
 
   const statusCounts = getStatusCounts();
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.email !== ADMIN_EMAIL) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-6">
         <div className="text-center">
@@ -211,9 +188,9 @@ export default function AdminOrders() {
                           key={status.value}
                           size="sm"
                           variant={order.status === status.value ? 'default' : 'outline'}
-                          onClick={() => updateStatusMutation.mutate({ orderId: order.id, newStatus: status.value, order })}
-                          className={order.status === status.value 
-                            ? 'bg-cyan-600 hover:bg-cyan-700' 
+                          onClick={() => updateStatusMutation.mutate({ orderId: order.id, newStatus: status.value })}
+                          className={order.status === status.value
+                            ? 'bg-cyan-600 hover:bg-cyan-700'
                             : 'border-gray-300 text-gray-700 hover:bg-gray-100'}
                         >
                           {status.label}
@@ -246,7 +223,7 @@ export default function AdminOrders() {
                       </div>
                       <p className="text-gray-700 ml-6 mt-1 font-medium">{order.pickup_time}</p>
                       <p className="text-sm text-gray-600 mt-3">
-                        Placed: {format(new Date(order.created_date), 'MMM dd, h:mm a')}
+                        Placed: {format(new Date(order.created_at), 'MMM dd, h:mm a')}
                       </p>
                     </div>
                     <div>

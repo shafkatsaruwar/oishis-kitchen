@@ -1,11 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Home, Menu, Phone, User, LogOut, UtensilsCrossed } from 'lucide-react';
+import { ShoppingCart, Menu, User, LogOut, UtensilsCrossed } from 'lucide-react';
 import { CartProvider, useCart } from './components/ordering/CartContext';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
+import { ADMIN_EMAIL } from '@/lib/supabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,17 +17,14 @@ import MobileMenu from './components/layout/MobileMenu';
 function LayoutContent({ children, currentPageName }) {
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
-  
-  const { data: user } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    },
-  });
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const isAdmin = user?.email === ADMIN_EMAIL;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate(createPageUrl('Home'));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -98,7 +95,7 @@ function LayoutContent({ children, currentPageName }) {
                           My Orders
                         </Link>
                       </DropdownMenuItem>
-                      {user?.role === 'admin' && (
+                      {isAdmin && (
                         <DropdownMenuItem asChild className="text-gray-700 hover:text-cyan-600 hover:bg-gray-100">
                           <Link to={createPageUrl('AdminOrders')} className="cursor-pointer">
                             Manage Orders
@@ -106,7 +103,7 @@ function LayoutContent({ children, currentPageName }) {
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem
-                        onClick={() => base44.auth.logout()}
+                        onClick={handleLogout}
                         className="cursor-pointer text-red-500 hover:bg-red-50"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
@@ -115,18 +112,19 @@ function LayoutContent({ children, currentPageName }) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => base44.auth.redirectToLogin()}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-cyan-600"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Log In
-                  </Button>
+                  <Link to={createPageUrl('Login')}>
+                    <Button
+                      variant="outline"
+                      className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-cyan-600"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Log In
+                    </Button>
+                  </Link>
                 )}
               </div>
 
-              <MobileMenu user={user} />
+              <MobileMenu user={user} isAdmin={isAdmin} onLogout={handleLogout} />
             </div>
           </div>
         </div>

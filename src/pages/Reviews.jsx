@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Star, User, Send } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -46,14 +46,20 @@ export default function Reviews() {
   const { data: approvedReviews = [] } = useQuery({
     queryKey: ['approved-reviews'],
     queryFn: async () => {
-      const reviews = await base44.entities.Review.filter({ status: 'approved' }, '-created_date');
-      return reviews;
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
     }
   });
 
   const submitReviewMutation = useMutation({
     mutationFn: async (reviewData) => {
-      await base44.entities.Review.create(reviewData);
+      const { error } = await supabase.from('reviews').insert([reviewData]);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['approved-reviews'] });
@@ -78,7 +84,7 @@ export default function Reviews() {
   const allReviews = [...yelpReviews, ...approvedReviews.map(r => ({
     name: r.name,
     stats: '',
-    date: new Date(r.created_date).toLocaleDateString(),
+    date: new Date(r.created_at).toLocaleDateString(),
     rating: r.rating,
     text: r.review_text
   }))];
@@ -111,7 +117,7 @@ export default function Reviews() {
               <CardContent className="p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Share Your Experience</h2>
                 <p className="text-gray-700 mb-6">We'd love to hear about your experience with our food!</p>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Label htmlFor="name" className="text-gray-700">Your Name *</Label>
@@ -177,7 +183,7 @@ export default function Reviews() {
                     <Send className="w-5 h-5 mr-2" />
                     {submitReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
                   </Button>
-                  
+
                   <p className="text-sm text-gray-500 text-center">
                     Your review will be posted after approval by our team.
                   </p>
