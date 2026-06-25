@@ -121,7 +121,7 @@ export default function Checkout() {
 
     } catch (error) {
       console.error('Error placing order:', error);
-      toast.error('Failed to place order. Please try again or call us.');
+      toast.error(`Order failed: ${error?.message || JSON.stringify(error)}`);
     } finally {
       setIsSubmitting(false);
     }
