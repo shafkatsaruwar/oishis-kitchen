@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToCart, initialQuantity }) {
   const [mode, setMode] = useState('serving'); // 'serving' | 'tray'
-  const [quantity, setQuantity] = useState(initialQuantity || item?.minQty || 1);
+  const [quantity, setQuantity] = useState(initialQuantity || Math.max(item?.minQty || 1, 8));
   const [spiciness, setSpiciness] = useState(item?.spice || 2);
   const [selectedOption, setSelectedOption] = useState(
     Array.isArray(item?.options) && item.options[0]?.name ?
