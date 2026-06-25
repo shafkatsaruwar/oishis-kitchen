@@ -14,6 +14,7 @@ import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 import PickupScheduler from '../components/ordering/PickupScheduler';
 import { useAuth } from '@/lib/AuthContext';
+import emailjs from '@emailjs/browser';
 
 export default function Checkout() {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -94,6 +95,24 @@ export default function Checkout() {
 
       const { error } = await supabase.from('orders').insert([orderData]);
       if (error) throw error;
+
+      // Send confirmation email (non-blocking)
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      if (serviceId && templateId && publicKey) {
+        emailjs.send(serviceId, templateId, {
+          to_name: formData.customer_name,
+          to_email: formData.customer_email,
+          order_number: orderNumber,
+          pickup_date: formData.pickup_date,
+          pickup_time: formData.pickup_time,
+          total: `$${total.toFixed(2)}`,
+          items_list: cart.map(i => `${i.quantity}x ${i.name} — $${(i.price * i.quantity).toFixed(2)}`).join('\n'),
+          payment_method: 'Pay on Pickup (Cash / Venmo / Zelle)',
+          special_requests: formData.special_requests || 'None',
+        }, publicKey).catch(err => console.error('Email failed:', err));
+      }
 
       clearCart();
       navigate(createPageUrl('OrderConfirmation') + `?orderNumber=${orderNumber}`);
