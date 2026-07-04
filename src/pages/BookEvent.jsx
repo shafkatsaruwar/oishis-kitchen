@@ -21,16 +21,16 @@ const EVENT_TYPES = [
 ];
 
 const MENU_INTERESTS = [
-  { value: 'Chicken Biryani Tray',  emoji: '🍚', note: 'Full tray — feeds ~25' },
-  { value: 'Beef Tehari Tray',      emoji: '🥩', note: 'Full tray — feeds ~25' },
-  { value: 'Mutton Kacchi Tray',    emoji: '🫕', note: 'Full tray — feeds ~25' },
-  { value: 'Chicken Roast',         emoji: '🍗', note: '$3.25/piece, min 8' },
-  { value: 'Chicken Shami Kebab',   emoji: '🍢', note: '$2.25/piece, min 8' },
-  { value: 'Beef Shami Kebab',      emoji: '🥙', note: '$2.75/piece, min 8' },
-  { value: 'Shingara / Samosa',     emoji: '🥟', note: '$1.99/piece, min 8' },
-  { value: 'Pulao',                 emoji: '🌾', note: 'Fragrant spiced rice' },
-  { value: 'Mixed Vegetable Tray',  emoji: '🥗', note: 'Full or half tray' },
-  { value: 'Payesh',                emoji: '🍮', note: 'Full tray — $84.99' },
+  { value: 'Chicken Biryani Tray',  emoji: '🍚', price: '$180', note: 'Full tray · feeds ~25' },
+  { value: 'Beef Tehari Tray',      emoji: '🥩', price: '$190', note: 'Full tray · feeds ~25' },
+  { value: 'Mutton Kacchi Tray',    emoji: '🫕', price: '$290', note: 'Full tray · feeds ~25' },
+  { value: 'Chicken Roast',         emoji: '🍗', price: '$3.25/pc', note: 'Min. 8 pieces' },
+  { value: 'Chicken Shami Kebab',   emoji: '🍢', price: '$2.25/pc', note: 'Min. 8 pieces' },
+  { value: 'Beef Shami Kebab',      emoji: '🥙', price: '$2.75/pc', note: 'Min. 8 pieces' },
+  { value: 'Shingara / Samosa',     emoji: '🥟', price: '$1.99/pc', note: 'Min. 8 pieces' },
+  { value: 'Pulao',                 emoji: '🌾', price: '$2.99/sv', note: 'Min. 8 servings' },
+  { value: 'Mixed Vegetable Tray',  emoji: '🥗', price: '$60–$120', note: 'Half or full tray' },
+  { value: 'Payesh',                emoji: '🍮', price: '$84.99', note: 'Full tray' },
 ];
 
 const STEPS = ['Occasion', 'The Details', 'The Menu', 'About You'];
@@ -296,6 +296,7 @@ export default function BookEvent() {
                           <span className="text-2xl flex-shrink-0">{item.emoji}</span>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-gray-800 leading-tight">{item.value}</div>
+                            <div className="text-sm font-bold text-rose-600 mt-0.5">{item.price}</div>
                             <div className="text-xs text-gray-400 mt-0.5">{item.note}</div>
                           </div>
                           {active && <CheckCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />}
