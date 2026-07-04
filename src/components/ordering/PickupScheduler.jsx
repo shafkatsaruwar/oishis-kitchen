@@ -208,8 +208,11 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {TIME_SLOTS.map(slot => {
-                const available = isTimeSlotAvailable(new Date(selectedDate), slot.value);
-                const bookings = getSlotBookingCount(new Date(selectedDate), slot.value);
+                // Parse as local date (not UTC) to avoid timezone off-by-one
+                const [y, m, d] = selectedDate.split('-').map(Number);
+                const localDate = new Date(y, m - 1, d);
+                const available = isTimeSlotAvailable(localDate, slot.value);
+                const bookings = getSlotBookingCount(localDate, slot.value);
                 const selected = selectedTime === slot.value;
                 const slotsRemaining = MAX_ORDERS_PER_SLOT - bookings;
 
