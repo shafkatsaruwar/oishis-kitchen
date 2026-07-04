@@ -84,7 +84,7 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      const orderNumber = Math.random().toString(36).substr(2, 6).toUpperCase();
 
       const orderData = {
         order_number: orderNumber,
