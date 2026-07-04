@@ -201,7 +201,7 @@ export default function Contact() {
                             <Input
                               value={formData.order_number}
                               onChange={e => update('order_number', e.target.value)}
-                              placeholder="e.g. ORD-1234567890-ABC"
+                              placeholder="e.g. A3K9PQ"
                               className="bg-white border-gray-300 text-gray-900 font-mono"
                             />
                             <p className="text-xs text-gray-400 mt-1">Found in your confirmation email</p>
