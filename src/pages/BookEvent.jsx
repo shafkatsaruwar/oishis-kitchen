@@ -21,12 +21,16 @@ const EVENT_TYPES = [
 ];
 
 const MENU_INTERESTS = [
-  { value: 'Biryani & Rice',      emoji: '🍚' },
-  { value: 'Curries & Entrées',   emoji: '🍛' },
-  { value: 'Kebabs & Grilled',    emoji: '🍢' },
-  { value: 'Appetizers & Snacks', emoji: '🥟' },
-  { value: 'Desserts & Sweets',   emoji: '🍮' },
-  { value: 'Beverages',           emoji: '🥤' },
+  { value: 'Chicken Biryani Tray',  emoji: '🍚', note: 'Full tray — feeds ~25' },
+  { value: 'Beef Tehari Tray',      emoji: '🥩', note: 'Full tray — feeds ~25' },
+  { value: 'Mutton Kacchi Tray',    emoji: '🫕', note: 'Full tray — feeds ~25' },
+  { value: 'Chicken Roast',         emoji: '🍗', note: '$3.25/piece, min 8' },
+  { value: 'Chicken Shami Kebab',   emoji: '🍢', note: '$2.25/piece, min 8' },
+  { value: 'Beef Shami Kebab',      emoji: '🥙', note: '$2.75/piece, min 8' },
+  { value: 'Shingara / Samosa',     emoji: '🥟', note: '$1.99/piece, min 8' },
+  { value: 'Pulao',                 emoji: '🌾', note: 'Fragrant spiced rice' },
+  { value: 'Mixed Vegetable Tray',  emoji: '🥗', note: 'Full or half tray' },
+  { value: 'Payesh',                emoji: '🍮', note: 'Full tray — $84.99' },
 ];
 
 const STEPS = ['Occasion', 'The Details', 'The Menu', 'About You'];
@@ -283,15 +287,18 @@ export default function BookEvent() {
                           type="button"
                           onClick={() => toggleInterest(item.value)}
                           className={cn(
-                            'flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200 text-left hover:scale-105',
+                            'flex items-start gap-3 p-4 rounded-2xl border-2 transition-all duration-200 text-left hover:scale-105',
                             active
                               ? 'border-rose-500 bg-rose-50 shadow-md'
                               : 'border-gray-200 bg-white hover:border-rose-300'
                           )}
                         >
-                          <span className="text-2xl">{item.emoji}</span>
-                          <span className="text-sm font-semibold text-gray-700 leading-tight">{item.value}</span>
-                          {active && <CheckCircle className="w-4 h-4 text-rose-500 ml-auto flex-shrink-0" />}
+                          <span className="text-2xl flex-shrink-0">{item.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-800 leading-tight">{item.value}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">{item.note}</div>
+                          </div>
+                          {active && <CheckCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />}
                         </button>
                       );
                     })}
