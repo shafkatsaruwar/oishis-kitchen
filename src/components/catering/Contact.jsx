@@ -30,7 +30,7 @@ export default function Contact() {
   const [topic, setTopic] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', order_number: '', message: '' });
 
   const update = (k, v) => setFormData(prev => ({ ...prev, [k]: v }));
 
@@ -50,6 +50,7 @@ export default function Contact() {
   const handleSubmit = async () => {
     if (!formData.name.trim())  { toast.error('Please enter your name.'); return; }
     if (!formData.email.trim()) { toast.error('Please enter your email.'); return; }
+    if (topic?.value === 'order' && !formData.order_number.trim()) { toast.error('Please enter your order number.'); return; }
     if (!formData.message.trim()) { toast.error('Please write a message.'); return; }
 
     setIsSubmitting(true);
@@ -62,8 +63,8 @@ export default function Contact() {
           customer_name:  formData.name,
           customer_email: formData.email,
           customer_phone: formData.phone || 'Not provided',
-          order_number:   `Contact: ${topic?.label}`,
-          items_list:     formData.message,
+          order_number:   topic?.value === 'order' ? formData.order_number : `Contact: ${topic?.label}`,
+          items_list:     (topic?.value === 'order' && formData.order_number ? `Order: ${formData.order_number}\n\n` : '') + formData.message,
           pickup_date:    '—',
           pickup_time:    '—',
           total:          '—',
@@ -193,6 +194,19 @@ export default function Contact() {
                             className="bg-white border-gray-300 text-gray-900"
                           />
                         </div>
+
+                        {topic?.value === 'order' && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Order Number *</label>
+                            <Input
+                              value={formData.order_number}
+                              onChange={e => update('order_number', e.target.value)}
+                              placeholder="e.g. ORD-1234567890-ABC"
+                              className="bg-white border-gray-300 text-gray-900 font-mono"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">Found in your confirmation email</p>
+                          </div>
+                        )}
 
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message *</label>
