@@ -115,6 +115,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
             <h3 className="text-xl font-bold text-gray-900">Select Pickup Date</h3>
             <div className="flex gap-2">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentMonth(addDays(currentMonth, -30))}
@@ -122,6 +123,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
                 ← Prev
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentMonth(addDays(currentMonth, 30))}
@@ -154,6 +156,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
 
               return (
                 <button
+                  type="button"
                   key={idx}
                   onClick={() => available && onDateSelect(format(day, 'yyyy-MM-dd'))}
                   disabled={!available}
@@ -212,6 +215,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
 
                 return (
                   <button
+                    type="button"
                     key={slot.value}
                     onClick={() => available && onTimeSelect(slot.value)}
                     disabled={!available}
