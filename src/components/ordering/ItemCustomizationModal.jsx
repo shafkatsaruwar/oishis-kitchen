@@ -34,6 +34,7 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
         ...item,
         price: selectedTray.price,
         quantity: trayQty,
+        minQty: 1,
         name: `${selectedTray.name} (${selectedTray.label})`,
         customizations: {}
       });
