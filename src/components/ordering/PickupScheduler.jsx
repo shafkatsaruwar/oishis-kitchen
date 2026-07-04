@@ -151,7 +151,8 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
           <div className="grid grid-cols-7 gap-2">
             {calendarDays.map((day, idx) => {
               const available = isDateAvailable(day);
-              const selected = selectedDate && isSameDay(day, new Date(selectedDate));
+              const [sy, sm, sd] = selectedDate ? selectedDate.split('-').map(Number) : [];
+              const selected = selectedDate && isSameDay(day, new Date(sy, sm - 1, sd));
               const current = isCurrentMonth(day);
 
               return (

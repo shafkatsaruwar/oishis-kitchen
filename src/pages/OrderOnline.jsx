@@ -325,6 +325,7 @@ export default function OrderOnline() {
 
         {/* Item Customization Modal */}
         <ItemCustomizationModal
+          key={selectedItem?.name}
           item={selectedItem}
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
