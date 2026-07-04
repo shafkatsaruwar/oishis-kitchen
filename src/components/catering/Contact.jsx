@@ -31,6 +31,7 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', order_number: '', message: '' });
+  const [noOrderNumber, setNoOrderNumber] = useState(false);
 
   const update = (k, v) => setFormData(prev => ({ ...prev, [k]: v }));
 
@@ -50,7 +51,7 @@ export default function Contact() {
   const handleSubmit = async () => {
     if (!formData.name.trim())  { toast.error('Please enter your name.'); return; }
     if (!formData.email.trim()) { toast.error('Please enter your email.'); return; }
-    if (topic?.value === 'order' && !formData.order_number.trim()) { toast.error('Please enter your order number.'); return; }
+    if (topic?.value === 'order' && !noOrderNumber && !formData.order_number.trim()) { toast.error('Please enter your order number, or check "I don\'t have one yet".'); return; }
     if (!formData.message.trim()) { toast.error('Please write a message.'); return; }
 
     setIsSubmitting(true);
@@ -63,8 +64,8 @@ export default function Contact() {
           customer_name:  formData.name,
           customer_email: formData.email,
           customer_phone: formData.phone || 'Not provided',
-          order_number:   topic?.value === 'order' ? formData.order_number : `Contact: ${topic?.label}`,
-          items_list:     (topic?.value === 'order' && formData.order_number ? `Order: ${formData.order_number}\n\n` : '') + formData.message,
+          order_number:   topic?.value === 'order' ? (noOrderNumber ? 'No order yet' : formData.order_number) : `Contact: ${topic?.label}`,
+          items_list:     (topic?.value === 'order' ? (noOrderNumber ? 'No order number (pre-order question)\n\n' : `Order: ${formData.order_number}\n\n`) : '') + formData.message,
           pickup_date:    '—',
           pickup_time:    '—',
           total:          '—',
@@ -197,14 +198,33 @@ export default function Contact() {
 
                         {topic?.value === 'order' && (
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Order Number *</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                              Order Number {noOrderNumber ? <span className="font-normal text-gray-400">(skipped)</span> : '*'}
+                            </label>
                             <Input
                               value={formData.order_number}
                               onChange={e => update('order_number', e.target.value)}
                               placeholder="e.g. A3K9PQ"
-                              className="bg-white border-gray-300 text-gray-900 font-mono"
+                              disabled={noOrderNumber}
+                              className={cn(
+                                'bg-white border-gray-300 text-gray-900 font-mono',
+                                noOrderNumber && 'opacity-40'
+                              )}
                             />
                             <p className="text-xs text-gray-400 mt-1">Found in your confirmation email</p>
+                            <button
+                              type="button"
+                              onClick={() => { setNoOrderNumber(v => !v); update('order_number', ''); }}
+                              className="mt-2 flex items-center gap-2 text-sm text-gray-500 hover:text-rose-600 transition-colors"
+                            >
+                              <div className={cn(
+                                'w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                                noOrderNumber ? 'bg-rose-500 border-rose-500' : 'border-gray-300'
+                              )}>
+                                {noOrderNumber && <CheckCircle className="w-3 h-3 text-white" />}
+                              </div>
+                              I don't have an order yet, but have a question
+                            </button>
                           </div>
                         )}
 
