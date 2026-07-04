@@ -45,12 +45,12 @@ function LayoutContent({ children, currentPageName }) {
                 { label: 'About', page: 'About' },
                 { label: 'Gallery', page: 'Gallery' },
                 { label: 'Reviews', page: 'Reviews' },
-                { label: 'Contact', page: 'Contact' },
+                { label: 'Hey There!', page: 'Contact' },
               ].map(({ label, page }) => (
                 <Link
                   key={page}
                   to={createPageUrl(page)}
-                  className={`transition-colors font-medium ${currentPageName === page ? 'text-cyan-600' : 'text-gray-700 hover:text-cyan-600'}`}
+                  className={`transition-colors font-medium whitespace-nowrap ${currentPageName === page ? 'text-cyan-600' : 'text-gray-700 hover:text-cyan-600'}`}
                 >
                   {label}
                 </Link>

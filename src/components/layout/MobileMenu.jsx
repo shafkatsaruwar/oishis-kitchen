@@ -13,7 +13,7 @@ export default function MobileMenu({ user, isAdmin, onLogout }) {
     { name: 'About', path: 'About', icon: User },
     { name: 'Gallery', path: 'Gallery', icon: Image },
     { name: 'Reviews', path: 'Reviews', icon: Star },
-    { name: 'Contact', path: 'Contact', icon: Phone },
+    { name: 'Hey There!', path: 'Contact', icon: Phone },
   ];
 
   return (
