@@ -116,7 +116,7 @@ export default function Checkout() {
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
       if (serviceId && templateId && publicKey) {
-        emailjs.send(serviceId, templateId, {
+        const emailParams = {
           to_name: formData.customer_name,
           to_email: formData.customer_email,
           order_number: orderNumber,
@@ -127,7 +127,18 @@ export default function Checkout() {
           payment_method: 'Pay on Pickup (Cash / Venmo / Zelle)',
           special_requests: formData.special_requests || 'None',
           track_url: `${window.location.origin}/TrackOrder?orderNumber=${orderNumber}`,
-        }, publicKey).catch(err => console.error('Email failed:', err));
+          customer_name: formData.customer_name,
+          customer_email: formData.customer_email,
+          customer_phone: formData.customer_phone,
+        };
+
+        // Customer confirmation email
+        emailjs.send(serviceId, templateId, emailParams, publicKey)
+          .catch(err => console.error('Customer email failed:', err));
+
+        // Admin notification email
+        emailjs.send(serviceId, 'template_9iofvm8', emailParams, publicKey)
+          .catch(err => console.error('Admin email failed:', err));
       }
 
       clearCart();
