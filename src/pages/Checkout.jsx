@@ -179,7 +179,7 @@ export default function Checkout() {
                     <div>
                       <h3 className="font-bold text-gray-900 mb-1">Guest Checkout Available</h3>
                       <p className="text-sm text-gray-600">
-                        You can checkout as a guest, or log in to track your orders and save your info
+                        No account needed. After ordering, you'll get an order number to track your order anytime at <span className="font-medium text-blue-600">oishiskitchen.vercel.app/TrackOrder</span>
                       </p>
                     </div>
                   </div>

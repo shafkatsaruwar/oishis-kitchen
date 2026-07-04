@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MapPin, Phone, Clock, Calendar, ShoppingBag, CreditCard, ArrowLeft, RotateCcw, Package, ChefHat, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { CheckCircle, MapPin, Phone, Clock, Calendar, ShoppingBag, CreditCard, ArrowLeft, RotateCcw, Package, ChefHat, Star, Copy } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/AuthContext';
+import { toast } from 'sonner';
 
 const COLORS = ['#06b6d4', '#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899'];
 
@@ -61,10 +63,17 @@ function formatTime(timeStr) {
 }
 
 export default function OrderConfirmation() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [orderNumber, setOrderNumber] = useState('');
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(true);
+
+  const copyOrderNumber = () => {
+    navigator.clipboard.writeText(orderNumber);
+    toast.success('Order number copied!');
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -156,8 +165,15 @@ export default function OrderConfirmation() {
         >
           <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-2xl p-6 text-white text-center mb-6 shadow-xl">
             <p className="text-cyan-100 text-sm font-medium uppercase tracking-widest mb-2">Your Order Number</p>
-            <p className="text-2xl md:text-3xl font-bold font-mono tracking-wider">{orderNumber}</p>
-            <p className="text-cyan-200 text-sm mt-2">Save this number to track your order</p>
+            <div className="flex items-center justify-center gap-3">
+              <p className="text-2xl md:text-3xl font-bold font-mono tracking-wider">{orderNumber}</p>
+              <button type="button" onClick={copyOrderNumber} className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors" title="Copy">
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-cyan-200 text-sm mt-2">
+              {user ? 'Track your order below' : 'Save this — you\'ll need it to track your order'}
+            </p>
           </div>
         </motion.div>
 
@@ -327,12 +343,21 @@ export default function OrderConfirmation() {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.3 }}
         >
-          <Link to={createPageUrl('MyOrders')} className="flex-1">
-            <Button size="lg" className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-700 hover:to-blue-800 text-base py-6">
-              <Package className="w-5 h-5 mr-2" />
-              Track My Orders
-            </Button>
-          </Link>
+          {user ? (
+            <Link to={createPageUrl('MyOrders')} className="flex-1">
+              <Button size="lg" className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-700 hover:to-blue-800 text-base py-6">
+                <Package className="w-5 h-5 mr-2" />
+                Track My Orders
+              </Button>
+            </Link>
+          ) : (
+            <Link to={`${createPageUrl('TrackOrder')}?orderNumber=${orderNumber}`} className="flex-1">
+              <Button size="lg" className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-700 hover:to-blue-800 text-base py-6">
+                <Package className="w-5 h-5 mr-2" />
+                Track This Order
+              </Button>
+            </Link>
+          )}
           <Link to={createPageUrl('OrderOnline')} className="flex-1">
             <Button size="lg" variant="outline" className="w-full text-base py-6 border-2">
               <RotateCcw className="w-5 h-5 mr-2" />
