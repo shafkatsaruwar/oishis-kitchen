@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogOut, UtensilsCrossed, Phone } from 'lucide-react';
+import { ShoppingCart, User, LogOut, UtensilsCrossed, Phone, MessageCircle } from 'lucide-react';
 import { CartProvider, useCart } from './components/ordering/CartContext';
 import { useAuth } from '@/lib/AuthContext';
 import { ADMIN_EMAIL } from '@/lib/supabase';
@@ -185,10 +185,14 @@ function LayoutContent({ children, currentPageName }) {
               Order Now
             </Button>
           </Link>
+          <a href="https://wa.me/17815794965" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" className="border-[#25D366] text-[#25D366] hover:bg-green-50 rounded-none h-11 px-3">
+              <MessageCircle className="w-4 h-4" />
+            </Button>
+          </a>
           <a href="tel:+17815794965">
-            <Button variant="outline" className="border-ink-200 text-ink-700 hover:bg-ink-50 rounded-none h-11 px-4 gap-2 font-dm text-sm">
+            <Button variant="outline" className="border-ink-200 text-ink-700 hover:bg-ink-50 rounded-none h-11 px-3">
               <Phone className="w-4 h-4" />
-              <span className="hidden sm:inline">Call / Text</span>
             </Button>
           </a>
         </div>

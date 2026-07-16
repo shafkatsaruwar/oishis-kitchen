@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../../utils';
-import { Phone } from 'lucide-react';
+import { Phone, MessageCircle } from 'lucide-react';
 
 export default function CTASection() {
   return (
@@ -15,16 +15,22 @@ export default function CTASection() {
         Order online in minutes, or reach out directly — we reply fast.
       </p>
 
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
         <Link to={createPageUrl('OrderOnline')}>
-          <Button className="bg-white text-ink-900 hover:bg-ink-50 font-dm font-medium px-12 h-12 rounded-none text-xs tracking-widest uppercase shadow-none">
+          <Button className="bg-white text-ink-900 hover:bg-ink-50 font-dm font-medium px-10 h-12 rounded-none text-xs tracking-widest uppercase shadow-none">
             View Menu & Order
           </Button>
         </Link>
+        <a href="https://wa.me/17815794965" target="_blank" rel="noopener noreferrer">
+          <Button className="bg-[#25D366] hover:bg-[#1ebe5d] text-white font-dm font-medium px-8 h-12 rounded-none text-xs tracking-widest uppercase shadow-none gap-2">
+            <MessageCircle className="w-4 h-4" />
+            WhatsApp
+          </Button>
+        </a>
         <a href="tel:+17815794965">
-          <Button className="bg-transparent border border-white/40 text-white hover:bg-white/10 font-dm font-medium px-10 h-12 rounded-none text-xs tracking-widest uppercase shadow-none gap-2">
+          <Button className="bg-transparent border border-white/40 text-white hover:bg-white/10 font-dm font-medium px-8 h-12 rounded-none text-xs tracking-widest uppercase shadow-none gap-2">
             <Phone className="w-3.5 h-3.5" />
-            781-579-4965
+            Call
           </Button>
         </a>
       </div>
