@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, X, Home, Image, Phone, ShoppingBag, Star, User, LogOut, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function MobileMenu({ user, isAdmin, onLogout }) {
+export default function MobileMenu({ user, isAdmin, onLogout, transparent = false }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
@@ -19,10 +19,10 @@ export default function MobileMenu({ user, isAdmin, onLogout }) {
   return (
     <div>
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="border-ink-200 text-ink-600 hover:bg-ink-50 rounded"
+        className={`rounded-none transition-colors duration-300 ${transparent ? 'text-white hover:bg-white/10' : 'text-ink-600 hover:bg-ink-50'}`}
       >
         {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
       </Button>

@@ -15,34 +15,34 @@ const galleryImages = [
 
 export default function Gallery() {
   return (
-    <section id="gallery" className="py-28 px-6 bg-ink-50">
+    <section id="gallery" className="py-28 px-6 bg-ink-900">
       <div className="max-w-7xl mx-auto">
 
         <div className="text-center mb-16">
-          <p className="font-dm text-gold-500 tracking-[0.2em] uppercase text-xs mb-5">From Our Kitchen</p>
-          <h2 className="font-cormorant font-light text-ink-900 text-4xl md:text-6xl leading-tight">
+          <p className="font-dm text-gold-400 tracking-[0.28em] uppercase text-xs mb-5">From Our Kitchen</p>
+          <h2 className="font-cormorant font-light text-white text-4xl md:text-6xl leading-tight">
             A feast for the <em>eyes</em>
           </h2>
         </div>
 
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
           {galleryImages.map((image, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.06 }}
+              transition={{ delay: idx * 0.05 }}
               className="break-inside-avoid group cursor-pointer">
-              <div className="relative overflow-hidden rounded-sm">
+              <div className="relative overflow-hidden">
                 <img
                   src={image.url}
                   alt={image.alt}
-                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-ink-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
-                  <p className="font-dm text-ink-50 text-sm tracking-wide">{image.alt}</p>
+                <div className="absolute inset-0 bg-ink-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex items-end p-5">
+                  <p className="font-dm text-white/90 text-xs tracking-widest uppercase">{image.alt}</p>
                 </div>
               </div>
             </motion.div>
