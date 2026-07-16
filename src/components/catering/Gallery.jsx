@@ -15,64 +15,39 @@ const galleryImages = [
 
 export default function Gallery() {
   return (
-    <section id="gallery" className="py-28 px-6 bg-white">
+    <section id="gallery" className="py-28 px-6 bg-ink-50">
       <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mb-16">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-10 bg-terracotta-400" />
-            <span className="font-karla text-terracotta-600 tracking-widest uppercase text-xs font-semibold">From Our Kitchen</span>
-            <div className="h-px w-10 bg-terracotta-400" />
-          </div>
-          <h2 className="font-playfair text-4xl md:text-6xl font-bold text-stone-900 mb-4">
-            A Feast for the <span className="text-terracotta-600">Eyes</span>
+        <div className="text-center mb-16">
+          <p className="font-dm text-gold-500 tracking-[0.2em] uppercase text-xs mb-5">From Our Kitchen</p>
+          <h2 className="font-cormorant font-light text-ink-900 text-4xl md:text-6xl leading-tight">
+            A feast for the <em>eyes</em>
           </h2>
-          <p className="font-karla text-lg text-stone-500 max-w-xl mx-auto">
-            Every dish is prepared with passion and presented with pride
-          </p>
-        </motion.div>
+        </div>
 
-        {/* Masonry grid */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-5 space-y-5">
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
           {galleryImages.map((image, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.07 }}
+              transition={{ delay: idx * 0.06 }}
               className="break-inside-avoid group cursor-pointer">
-              <div className="relative overflow-hidden rounded-2xl shadow-md">
+              <div className="relative overflow-hidden rounded-sm">
                 <img
                   src={image.url}
                   alt={image.alt}
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-terracotta-900/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0 transition-transform">
-                  <p className="font-karla text-sm font-medium">{image.alt}</p>
+                <div className="absolute inset-0 bg-ink-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
+                  <p className="font-dm text-ink-50 text-sm tracking-wide">{image.alt}</p>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-
-        {/* Footer quote */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-16 text-center">
-          <p className="font-karla text-lg text-stone-500 italic max-w-lg mx-auto">
-            "The beauty of a dish is in its preparation, but its soul is in the love poured into it"
-          </p>
-        </motion.div>
       </div>
     </section>
   );

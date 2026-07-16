@@ -5,8 +5,8 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
-  			playfair: ['"Playfair Display SC"', 'Georgia', 'serif'],
-  			karla: ['Karla', 'system-ui', 'sans-serif'],
+  			cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+  			dm: ['"DM Sans"', 'system-ui', 'sans-serif'],
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -14,24 +14,29 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
-  			terracotta: {
-  				50:  '#fdf8f5',
-  				100: '#faeee6',
-  				200: '#f5d9c9',
-  				300: '#ecba9d',
-  				400: '#e09472',
-  				500: '#C67B5C',
-  				600: '#b5651d',
-  				700: '#9a4e18',
-  				800: '#7c3f15',
-  				900: '#663212',
+  			gold: {
+  				50:  '#fdf9ee',
+  				100: '#f7edd0',
+  				200: '#edd89e',
+  				300: '#e2bd6c',
+  				400: '#d9a548',
+  				500: '#C9A84C',
+  				600: '#b08a32',
+  				700: '#8c6b27',
+  				800: '#6e5220',
+  				900: '#57411a',
   			},
-  			cream: {
-  				50:  '#FFFDF9',
-  				100: '#FEF9F0',
-  				200: '#F5F0E1',
-  				300: '#EDE5D0',
-  				400: '#D4C4A8',
+  			ink: {
+  				50:  '#F9F7F4',
+  				100: '#F2EFE9',
+  				200: '#DDD9D0',
+  				300: '#B8B2A7',
+  				400: '#8C8479',
+  				500: '#5E574E',
+  				600: '#3D3730',
+  				700: '#2A2520',
+  				800: '#1A1714',
+  				900: '#0F0D0B',
   			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

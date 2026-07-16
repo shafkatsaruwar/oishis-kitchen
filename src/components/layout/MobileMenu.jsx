@@ -17,14 +17,14 @@ export default function MobileMenu({ user, isAdmin, onLogout }) {
   ];
 
   return (
-    <div className="md:hidden">
+    <div>
       <Button
         variant="outline"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-cyan-600"
+        className="border-ink-200 text-ink-600 hover:bg-ink-50 rounded"
       >
-        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
       </Button>
 
       <AnimatePresence>
@@ -34,28 +34,28 @@ export default function MobileMenu({ user, isAdmin, onLogout }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 top-[72px]"
+              className="fixed inset-0 bg-ink-900/40 z-40 top-[65px]"
               onClick={() => setIsOpen(false)}
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="fixed right-0 top-[72px] bottom-0 w-64 bg-white shadow-2xl z-50 p-6 border-l border-gray-200"
+              transition={{ type: 'tween', duration: 0.25 }}
+              className="fixed right-0 top-[65px] bottom-0 w-64 bg-white shadow-2xl z-50 p-6 border-l border-ink-100"
             >
-              <nav className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                {menuItems.map((item) => {
+              <nav className="overflow-hidden">
+                {menuItems.map((item, idx) => {
                   const Icon = item.icon;
                   return (
                     <Link
                       key={item.path}
                       to={createPageUrl(item.path)}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4 border-b border-gray-200 last:border-b-0"
+                      className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 border-b border-ink-100 last:border-b-0 rounded-sm"
                     >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{item.name}</span>
+                      <Icon className="w-4 h-4 text-ink-400" />
+                      <span className="font-dm text-sm">{item.name}</span>
                     </Link>
                   );
                 })}
@@ -64,37 +64,37 @@ export default function MobileMenu({ user, isAdmin, onLogout }) {
                     <Link
                       to={createPageUrl('MyOrders')}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4 border-b border-gray-200"
+                      className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 border-b border-ink-100 rounded-sm"
                     >
-                      <ShoppingBag className="w-5 h-5" />
-                      <span className="font-medium">My Orders</span>
+                      <ShoppingBag className="w-4 h-4 text-ink-400" />
+                      <span className="font-dm text-sm">My Orders</span>
                     </Link>
                     {isAdmin && (
                       <Link
                         to={createPageUrl('AdminOrders')}
                         onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4 border-b border-gray-200"
+                        className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 border-b border-ink-100 rounded-sm"
                       >
-                        <Settings className="w-5 h-5" />
-                        <span className="font-medium">Manage Orders</span>
+                        <Settings className="w-4 h-4 text-ink-400" />
+                        <span className="font-dm text-sm">Manage Orders</span>
                       </Link>
                     )}
                     <button
                       onClick={() => { setIsOpen(false); onLogout(); }}
-                      className="w-full flex items-center gap-3 text-red-500 hover:bg-red-50 transition-colors py-3 px-4"
+                      className="w-full flex items-center gap-3 text-red-500 hover:bg-red-50 transition-colors py-3 px-3 rounded-sm"
                     >
-                      <LogOut className="w-5 h-5" />
-                      <span className="font-medium">Log Out</span>
+                      <LogOut className="w-4 h-4" />
+                      <span className="font-dm text-sm">Log Out</span>
                     </button>
                   </>
                 ) : (
                   <Link
                     to={createPageUrl('Login')}
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 transition-colors py-3 px-4"
+                    className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 rounded-sm"
                   >
-                    <User className="w-5 h-5" />
-                    <span className="font-medium">Log In</span>
+                    <User className="w-4 h-4 text-ink-400" />
+                    <span className="font-dm text-sm">Log In</span>
                   </Link>
                 )}
               </nav>
