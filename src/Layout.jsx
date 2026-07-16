@@ -27,19 +27,19 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-cream-50">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-cream-300">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex justify-between items-center">
-            <Link to={createPageUrl('Home')} className="flex items-center gap-2">
-              <img src="/logo.png" alt="Oishi's Kitchen" className="w-10 h-10 object-contain" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
+            <Link to={createPageUrl('Home')} className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="Oishi's Kitchen" className="w-9 h-9 object-contain" />
+              <span className="font-playfair text-xl font-bold text-stone-900">
                 Oishi's Kitchen
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-7">
               {[
                 { label: 'Home', page: 'Home' },
                 { label: 'About', page: 'About' },
@@ -50,7 +50,7 @@ function LayoutContent({ children, currentPageName }) {
                 <Link
                   key={page}
                   to={createPageUrl(page)}
-                  className={`transition-colors font-medium whitespace-nowrap ${currentPageName === page ? 'text-cyan-600' : 'text-gray-700 hover:text-cyan-600'}`}
+                  className={`font-karla font-medium whitespace-nowrap transition-colors duration-200 ${currentPageName === page ? 'text-terracotta-600' : 'text-stone-600 hover:text-terracotta-600'}`}
                 >
                   {label}
                 </Link>
@@ -59,22 +59,22 @@ function LayoutContent({ children, currentPageName }) {
 
             <div className="flex items-center gap-2">
               <Link to={createPageUrl('OrderOnline')} className="hidden sm:block">
-                <Button className="bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-700 hover:to-blue-800">
+                <Button className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-karla font-semibold">
                   <Menu className="w-4 h-4 mr-2" />
                   Menu & Order
                 </Button>
               </Link>
               <Link to={createPageUrl('OrderOnline')} className="sm:hidden">
-                <Button size="icon" className="bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-700 hover:to-blue-800">
+                <Button size="icon" className="bg-terracotta-600 hover:bg-terracotta-700 text-white">
                   <UtensilsCrossed className="w-5 h-5" />
                 </Button>
               </Link>
 
               <Link to={createPageUrl('Cart')} className="relative">
-                <Button variant="outline" size="icon" className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-cyan-600">
+                <Button variant="outline" size="icon" className="border-cream-400 text-stone-600 hover:bg-cream-100 hover:text-terracotta-600">
                   <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    <span className="absolute -top-2 -right-2 bg-terracotta-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                       {cartCount}
                     </span>
                   )}
@@ -85,18 +85,18 @@ function LayoutContent({ children, currentPageName }) {
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-cyan-600">
+                      <Button variant="outline" size="icon" className="border-cream-400 text-stone-600 hover:bg-cream-100 hover:text-terracotta-600">
                         <User className="w-5 h-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-white border-gray-200">
-                      <DropdownMenuItem asChild className="text-gray-700 hover:text-cyan-600 hover:bg-gray-100">
+                    <DropdownMenuContent align="end" className="bg-white border-cream-300">
+                      <DropdownMenuItem asChild className="text-stone-700 hover:text-terracotta-600 font-karla">
                         <Link to={createPageUrl('MyOrders')} className="cursor-pointer">
                           My Orders
                         </Link>
                       </DropdownMenuItem>
                       {isAdmin && (
-                        <DropdownMenuItem asChild className="text-gray-700 hover:text-cyan-600 hover:bg-gray-100">
+                        <DropdownMenuItem asChild className="text-stone-700 hover:text-terracotta-600 font-karla">
                           <Link to={createPageUrl('AdminOrders')} className="cursor-pointer">
                             Manage Orders
                           </Link>
@@ -104,7 +104,7 @@ function LayoutContent({ children, currentPageName }) {
                       )}
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="cursor-pointer text-red-500 hover:bg-red-50"
+                        className="cursor-pointer text-red-500 hover:bg-red-50 font-karla"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Log Out
@@ -115,7 +115,7 @@ function LayoutContent({ children, currentPageName }) {
                   <Link to={createPageUrl('Login')}>
                     <Button
                       variant="outline"
-                      className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-cyan-600"
+                      className="border-cream-400 text-stone-600 hover:bg-cream-100 hover:text-terracotta-600 font-karla"
                     >
                       <User className="w-4 h-4 mr-2" />
                       Log In

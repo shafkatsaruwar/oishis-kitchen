@@ -4,12 +4,35 @@ module.exports = {
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
   	extend: {
+  		fontFamily: {
+  			playfair: ['"Playfair Display SC"', 'Georgia', 'serif'],
+  			karla: ['Karla', 'system-ui', 'sans-serif'],
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			terracotta: {
+  				50:  '#fdf8f5',
+  				100: '#faeee6',
+  				200: '#f5d9c9',
+  				300: '#ecba9d',
+  				400: '#e09472',
+  				500: '#C67B5C',
+  				600: '#b5651d',
+  				700: '#9a4e18',
+  				800: '#7c3f15',
+  				900: '#663212',
+  			},
+  			cream: {
+  				50:  '#FFFDF9',
+  				100: '#FEF9F0',
+  				200: '#F5F0E1',
+  				300: '#EDE5D0',
+  				400: '#D4C4A8',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
