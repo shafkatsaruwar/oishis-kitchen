@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import { createPageUrl } from '../../utils';
 
 export default function Hero() {
@@ -37,7 +38,15 @@ export default function Hero() {
             Homemade Bengali food for weddings, events, and every celebration worth remembering.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+          {/* Social proof */}
+          <div className="flex items-center justify-center gap-2 mb-10">
+            <div className="flex gap-0.5">
+              {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 text-gold-400 fill-current" />)}
+            </div>
+            <span className="font-dm text-white/50 text-xs">5.0 · 100+ events catered in Malden, MA</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
             <Link to={createPageUrl('OrderOnline')}>
               <Button
                 size="lg"
@@ -54,6 +63,10 @@ export default function Hero() {
               </Button>
             </Link>
           </div>
+
+          <a href="tel:+17815794965" className="font-dm text-white/40 text-xs hover:text-white/60 transition-colors">
+            Questions? Call or text 781-579-4965
+          </a>
         </motion.div>
       </div>
 

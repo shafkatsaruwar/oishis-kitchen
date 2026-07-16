@@ -3,6 +3,7 @@ import Hero from '../components/catering/Hero';
 import About from '../components/catering/About';
 import Gallery from '../components/catering/Gallery';
 import Testimonials from '../components/catering/Testimonials';
+import CTASection from '../components/catering/CTASection';
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <About />
       <Gallery />
       <Testimonials />
+      <CTASection />
     </div>
   );
 }
