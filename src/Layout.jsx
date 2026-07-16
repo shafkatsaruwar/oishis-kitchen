@@ -173,26 +173,28 @@ function LayoutContent({ children, currentPageName }) {
         </div>
       </nav>
 
-      <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px] lg:pb-0' : ''}`}>
+      <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px]' : ''}`}>
         {children}
       </div>
 
       {/* Sticky mobile order bar — hidden on cart/checkout pages */}
       {!['Cart', 'Checkout', 'AdminOrders', 'MyOrders', 'Login'].includes(currentPageName) && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-ink-100 px-4 py-3 flex gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-ink-100 px-4 py-3 flex gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <Link to={createPageUrl('OrderOnline')} className="flex-1">
             <Button className="w-full bg-ink-900 hover:bg-ink-700 text-white font-dm font-medium text-sm rounded-none h-11 tracking-wide">
               Order Now
             </Button>
           </Link>
           <a href="https://wa.me/17815794965" target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" className="border-[#25D366] text-[#25D366] hover:bg-green-50 rounded-none h-11 px-3">
+            <Button variant="outline" className="border-[#25D366] text-[#25D366] hover:bg-green-50 rounded-none h-11 px-4 gap-2 font-dm text-sm">
               <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">WhatsApp</span>
             </Button>
           </a>
           <a href="tel:+17815794965">
-            <Button variant="outline" className="border-ink-200 text-ink-700 hover:bg-ink-50 rounded-none h-11 px-3">
+            <Button variant="outline" className="border-ink-200 text-ink-700 hover:bg-ink-50 rounded-none h-11 px-4 gap-2 font-dm text-sm">
               <Phone className="w-4 h-4" />
+              <span className="hidden sm:inline">Call</span>
             </Button>
           </a>
         </div>
