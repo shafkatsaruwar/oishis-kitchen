@@ -14,6 +14,7 @@ import OrderOnline from './pages/OrderOnline';
 import Reviews from './pages/Reviews';
 import TrackOrder from './pages/TrackOrder';
 import MonthlyPlans from './pages/MonthlyPlans';
+import MonthlyPlanCheckout from './pages/MonthlyPlanCheckout';
 import __Layout from './Layout.jsx';
 
 
@@ -33,6 +34,7 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "OrderOnline": OrderOnline,
     "MonthlyPlans": MonthlyPlans,
+    "MonthlyPlanCheckout": MonthlyPlanCheckout,
     "Reviews": Reviews,
     "TrackOrder": TrackOrder,
 }

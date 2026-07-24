@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Check, MessageCircle, Phone, CalendarDays, Utensils, Heart, ChevronDown } from 'lucide-react';
+import { Check, MessageCircle, Phone, CalendarDays, Utensils, Heart, ChevronDown, ArrowRight } from 'lucide-react';
+import { createPageUrl } from '../utils';
 
 const PLANS = [
   {
@@ -64,15 +66,18 @@ const HOW_IT_WORKS = [
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
 
 function DishSelector({ plan, highlight }) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState([]);
 
   const toggle = (dish) =>
     setSelected((prev) => prev.includes(dish) ? prev.filter((d) => d !== dish) : [...prev, dish]);
 
-  const waText = selected.length > 0
-    ? `Hi! I'm interested in the ${plan.name} monthly plan. My preferred dishes are: ${selected.join(', ')}. Can we get started?`
-    : `Hi! I'm interested in the ${plan.name} monthly plan. Can we talk details?`;
+  const handleCheckout = () => {
+    const params = new URLSearchParams({ plan: plan.name });
+    if (selected.length > 0) params.set('dishes', selected.join(','));
+    navigate(createPageUrl('MonthlyPlanCheckout') + '?' + params.toString());
+  };
 
   return (
     <div>
@@ -133,21 +138,20 @@ function DishSelector({ plan, highlight }) {
         )}
       </AnimatePresence>
 
-      <a
-        href={`https://wa.me/17815794965?text=${encodeURIComponent(waText)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block mt-3"
-      >
-        <Button className={`w-full rounded-none h-11 font-dm font-medium text-sm tracking-wide gap-2 ${
+      <Button
+        onClick={handleCheckout}
+        className={`w-full rounded-none h-11 font-dm font-medium text-sm tracking-wide gap-2 mt-3 ${
           highlight
             ? 'bg-gold-500 hover:bg-gold-400 text-ink-900'
             : 'bg-ink-900 hover:bg-ink-700 text-white'
-        }`}>
-          <MessageCircle className="w-4 h-4" />
-          {selected.length > 0 ? 'Send my choices on WhatsApp' : 'Get Started on WhatsApp'}
-        </Button>
-      </a>
+        }`}
+      >
+        {selected.length > 0 ? (
+          <><Check className="w-4 h-4" />{selected.length} dishes — Subscribe</>
+        ) : (
+          <>Subscribe <ArrowRight className="w-4 h-4" /></>
+        )}
+      </Button>
     </div>
   );
 }
