@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -13,18 +13,24 @@ import emailjs from '@emailjs/browser';
 import { Check, ChevronRight, ChevronLeft, CalendarDays, CreditCard, Utensils } from 'lucide-react';
 
 const PLAN_DATA = {
-  'Family Pack':        { price: 220, pickups: 2, desc: '2 pickups/month · serves 8 each' },
-  'Weekly Feast':       { price: 380, pickups: 4, desc: '4 pickups/month · serves 8 each' },
-  'Corporate & Custom': { price: null, pickups: 4, desc: 'Flexible pickups · custom quantities' },
+  'Family Pack':        { pickups: 2, desc: '2 weeks/month · 3 dishes/week · serves 8' },
+  'Weekly Feast':       { pickups: 4, desc: '4 weeks/month · 3 dishes/week · serves 8' },
+  'Corporate & Custom': { pickups: 4, desc: 'Flexible weeks · custom quantities' },
 };
 
-const MENU_ITEMS = [
-  { category: 'Rice & Biryani',  items: ['Beef Tehari', 'Beef Kacchi', 'Mutton Kacchi', 'Chicken Biryani', 'Pulao'] },
-  { category: 'Meat & Chicken',  items: ['Chicken Roast', 'Beef Curry', 'Chicken Curry', 'Mutton Curry'] },
-  { category: 'Kebabs & Snacks', items: ['Chicken Shami Kebab', 'Beef Shami Kebab', 'Chicken Boti Kebab', 'Tuna Kebab', 'Shingara / Samosa'] },
-  { category: 'Vegetarian',      items: ['Mixed Vegetable', 'Daal', 'Aloo Bhaji'] },
-  { category: 'Desserts',        items: ['Payesh', 'Mishti Doi'] },
+const MAX_DISHES_PER_PICKUP = 3;
+
+// Monthly plan menu — price per week (serves 8)
+const PLAN_MENU = [
+  { name: 'Bhat',            desc: 'Steamed basmati rice',                 price: 20 },
+  { name: 'Mach',            desc: 'Bengali fish curry (Rohu)',             price: 45 },
+  { name: 'Chicken Curry',   desc: 'Home-style chicken in aromatic gravy',  price: 30 },
+  { name: 'Beef Curry',      desc: 'Slow-cooked beef in Bengali spices',    price: 40 },
+  { name: 'Mixed Veg',       desc: 'Seasonal vegetables in light curry',    price: 25 },
+  { name: 'Chicken Biryani', desc: 'Aromatic rice with spiced chicken',     price: 64 },
 ];
+
+const DISH_PRICES = Object.fromEntries(PLAN_MENU.map(d => [d.name, d.price]));
 
 const PICKUP_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -68,40 +74,64 @@ function StepBar({ current }) {
   );
 }
 
+const pickupTotal = (dishes) =>
+  dishes.reduce((sum, d) => sum + (DISH_PRICES[d] ?? 0), 0);
+
 function DishPicker({ weekLabel, dishes, onChange }) {
-  const toggle = (dish) =>
-    onChange(dishes.includes(dish) ? dishes.filter(d => d !== dish) : [...dishes, dish]);
+  const toggle = (dish) => {
+    if (dishes.includes(dish)) {
+      onChange(dishes.filter(d => d !== dish));
+    } else if (dishes.length < MAX_DISHES_PER_PICKUP) {
+      onChange([...dishes, dish]);
+    }
+  };
+
+  const subtotal = pickupTotal(dishes);
+  const atMax = dishes.length >= MAX_DISHES_PER_PICKUP;
 
   return (
-    <div className="space-y-5">
-      {MENU_ITEMS.map(({ category, items }) => (
-        <div key={category}>
-          <p className="font-dm text-[10px] tracking-widest uppercase text-ink-400 mb-2">{category}</p>
-          <div className="flex flex-wrap gap-2">
-            {items.map(dish => {
-              const active = dishes.includes(dish);
-              return (
-                <button
-                  key={dish}
-                  onClick={() => toggle(dish)}
-                  className={`font-dm text-sm px-3 py-2 rounded-sm border transition-all duration-150 ${
-                    active
-                      ? 'bg-ink-900 border-ink-900 text-white'
-                      : 'bg-white border-ink-200 text-ink-600 hover:border-ink-400'
-                  }`}
-                >
-                  {active && <Check className="w-3 h-3 inline mr-1.5" />}
-                  {dish}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between mb-1">
+        <p className="font-dm text-ink-500 text-sm">Choose {MAX_DISHES_PER_PICKUP} dishes for {weekLabel}</p>
+        <span className={`font-dm text-xs px-2 py-0.5 rounded-sm ${atMax ? 'bg-ink-900 text-white' : 'bg-ink-100 text-ink-500'}`}>
+          {dishes.length} / {MAX_DISHES_PER_PICKUP}
+        </span>
+      </div>
+      {PLAN_MENU.map(({ name, desc, price }) => {
+        const active = dishes.includes(name);
+        const locked = !active && atMax;
+        return (
+          <button
+            key={name}
+            onClick={() => toggle(name)}
+            disabled={locked}
+            className={`w-full flex items-center gap-4 px-4 py-4 rounded-sm border text-left transition-all duration-150 ${
+              active
+                ? 'bg-ink-900 border-ink-900 text-white'
+                : locked
+                  ? 'bg-ink-50 border-ink-100 text-ink-300 cursor-not-allowed'
+                  : 'bg-white border-ink-200 text-ink-700 hover:border-ink-400'
+            }`}
+          >
+            <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center shrink-0 transition-colors ${
+              active ? 'border-white bg-white' : locked ? 'border-ink-200' : 'border-ink-300'
+            }`}>
+              {active && <Check className="w-3 h-3 text-ink-900" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`font-dm text-sm font-medium ${active ? 'text-white' : locked ? 'text-ink-300' : 'text-ink-800'}`}>{name}</p>
+              <p className={`font-dm text-xs mt-0.5 ${active ? 'text-white/70' : 'text-ink-400'}`}>{desc}</p>
+            </div>
+            <p className={`font-dm text-sm font-medium shrink-0 ${active ? 'text-white' : locked ? 'text-ink-300' : 'text-ink-600'}`}>
+              ${price}
+            </p>
+          </button>
+        );
+      })}
       {dishes.length > 0 && (
-        <div className="mt-2 p-3 bg-ink-50 border border-ink-100 rounded-sm">
-          <p className="font-dm text-ink-400 text-xs mb-1">{weekLabel} · {dishes.length} dish{dishes.length > 1 ? 'es' : ''}</p>
-          <p className="font-dm text-ink-700 text-sm leading-relaxed">{dishes.join(' · ')}</p>
+        <div className="mt-1 p-3 bg-ink-50 border border-ink-100 rounded-sm flex items-center justify-between gap-4">
+          <p className="font-dm text-ink-600 text-sm">{dishes.join(' · ')}</p>
+          <p className="font-dm text-ink-900 font-medium text-sm shrink-0">${subtotal}</p>
         </div>
       )}
     </div>
@@ -141,6 +171,7 @@ export default function MonthlyPlanCheckout() {
         ...f,
         name: user.user_metadata?.full_name || f.name,
         email: user.email || f.email,
+        phone: user.user_metadata?.phone || f.phone,
       }));
     }
   }, [user]);
@@ -161,11 +192,11 @@ export default function MonthlyPlanCheckout() {
 
   const validate = () => {
     if (step === 1) {
-      const empty = Array.from({ length: numPickups }, (_, i) => i)
-        .find(i => weekDishes[i].length === 0);
-      if (empty !== undefined) {
-        toast.error(`Please select at least one dish for Pickup ${empty + 1}.`);
-        setActiveWeek(empty);
+      const incomplete = Array.from({ length: numPickups }, (_, i) => i)
+        .find(i => weekDishes[i].length < MAX_DISHES_PER_PICKUP);
+      if (incomplete !== undefined) {
+        toast.error(`Please choose ${MAX_DISHES_PER_PICKUP} dishes for ${weekLabel(incomplete)}.`);
+        setActiveWeek(incomplete);
         return false;
       }
     }
@@ -185,25 +216,32 @@ export default function MonthlyPlanCheckout() {
     setIsSubmitting(true);
     try {
       const orderNumber = `MP-${Date.now().toString().slice(-6)}`;
-      const basePrice = plan.price ?? 0;
+      const monthlyTotal = Array.from({ length: numPickups }, (_, i) => pickupTotal(weekDishes[i])).reduce((a, b) => a + b, 0);
 
       // Build a readable dish schedule
       const dishSchedule = Array.from({ length: numPickups }, (_, i) =>
-        `Pickup ${i + 1}: ${weekDishes[i].join(', ')}`
+        `${weekLabel(i)}: ${weekDishes[i].join(', ')} ($${pickupTotal(weekDishes[i])})`
       ).join('\n');
 
-      // Flatten all dishes for items array
-      const allDishes = [...new Set(Object.values(weekDishes).flat())];
+      // Flatten all dishes with real prices for items array
+      const itemsForOrder = Object.entries(weekDishes).flatMap(([week, dishes]) =>
+        dishes.map(d => ({
+          name: `${weekLabel(Number(week))}: ${d}`,
+          price: DISH_PRICES[d] ?? 0,
+          quantity: 1,
+          special_instructions: '',
+        }))
+      );
 
       const orderData = {
         order_number: orderNumber,
         customer_name: form.name,
         customer_email: form.email,
         customer_phone: form.phone,
-        items: allDishes.map(d => ({ name: d, price: 0, quantity: 1, special_instructions: '' })),
-        subtotal: basePrice,
+        items: itemsForOrder,
+        subtotal: monthlyTotal,
         tax: 0,
-        total: basePrice,
+        total: monthlyTotal,
         pickup_date: form.preferredDays.join(', '),
         pickup_time: 'Monthly Plan',
         special_requests: `MONTHLY PLAN: ${planName}\n\n${dishSchedule}\n\nPayment: ${paymentMethod}\nNotes: ${form.notes || 'None'}`,
@@ -225,7 +263,7 @@ export default function MonthlyPlanCheckout() {
           order_number: orderNumber,
           pickup_date: form.preferredDays.join(', '),
           pickup_time: 'Monthly Plan',
-          total: plan.price ? `From $${plan.price}/month` : 'Custom pricing',
+          total: `$${monthlyTotal}/month`,
           items_list: dishSchedule,
           payment_method: paymentMethod === 'venmo' ? 'Venmo (@oishiskitchen)' : paymentMethod === 'zelle' ? 'Zelle (781-579-4965)' : 'Cash on First Pickup',
           special_requests: `Plan: ${planName}\n${form.notes || ''}`,
@@ -246,7 +284,7 @@ export default function MonthlyPlanCheckout() {
     }
   };
 
-  const weekLabel = (i) => numPickups === 2 ? `Pickup ${i + 1}` : `Week ${i + 1}`;
+  const weekLabel = (i) => `Week ${i + 1}`;
 
   return (
     <div className="min-h-screen bg-ink-50 pt-[65px] pb-10">
@@ -256,7 +294,7 @@ export default function MonthlyPlanCheckout() {
         <div className="text-center mb-8">
           <p className="font-dm text-gold-500 tracking-[0.28em] uppercase text-xs mb-2">{planName}</p>
           <h1 className="font-cormorant font-light text-ink-900 text-4xl">
-            {plan.price ? `From $${plan.price}/month` : 'Custom pricing'}
+            Priced by your selections
           </h1>
           <p className="font-dm text-ink-400 text-sm mt-1">{plan.desc}</p>
         </div>
@@ -279,7 +317,7 @@ export default function MonthlyPlanCheckout() {
               <div>
                 <h2 className="font-cormorant text-ink-900 text-2xl mb-1">Choose your dishes</h2>
                 <p className="font-dm text-ink-400 text-sm mb-6">
-                  Pick different dishes for each {numPickups === 2 ? 'pickup' : 'week'}. You can rotate these monthly.
+                  Choose 3 dishes per week. Each week can be different — you can rotate monthly too.
                 </p>
 
                 {/* Week tabs */}
@@ -301,7 +339,7 @@ export default function MonthlyPlanCheckout() {
                       >
                         {filled && !active && <Check className="w-3 h-3 text-gold-500" />}
                         {weekLabel(i)}
-                        {filled && <span className={`text-xs ${active ? 'text-white/60' : 'text-ink-400'}`}>· {weekDishes[i].length}</span>}
+                        {filled && <span className={`text-xs ${active ? 'text-white/60' : 'text-ink-400'}`}>· ${pickupTotal(weekDishes[i])}</span>}
                       </button>
                     );
                   })}
@@ -317,28 +355,34 @@ export default function MonthlyPlanCheckout() {
                 {numPickups > 1 && (
                   <div className="mt-8 space-y-2">
                     <p className="font-dm text-ink-400 text-xs tracking-widest uppercase mb-3">Month at a glance</p>
-                    {Array.from({ length: numPickups }, (_, i) => (
-                      <div
-                        key={i}
-                        className={`flex items-start gap-3 px-4 py-3 rounded-sm border cursor-pointer transition-colors ${
-                          activeWeek === i ? 'border-ink-300 bg-white' : 'border-ink-100 bg-white hover:border-ink-200'
-                        }`}
-                        onClick={() => setActiveWeek(i)}
-                      >
-                        <div className={`mt-0.5 w-5 h-5 rounded-sm flex items-center justify-center shrink-0 text-[10px] font-dm font-medium ${
-                          weekDishes[i].length > 0 ? 'bg-gold-100 text-gold-700' : 'bg-ink-100 text-ink-400'
-                        }`}>
-                          {i + 1}
+                    {Array.from({ length: numPickups }, (_, i) => {
+                      const sub = pickupTotal(weekDishes[i]);
+                      return (
+                        <div
+                          key={i}
+                          className={`flex items-start gap-3 px-4 py-3 rounded-sm border cursor-pointer transition-colors ${
+                            activeWeek === i ? 'border-ink-300 bg-white' : 'border-ink-100 bg-white hover:border-ink-200'
+                          }`}
+                          onClick={() => setActiveWeek(i)}
+                        >
+                          <div className={`mt-0.5 w-5 h-5 rounded-sm flex items-center justify-center shrink-0 text-[10px] font-dm font-medium ${
+                            weekDishes[i].length > 0 ? 'bg-gold-100 text-gold-700' : 'bg-ink-100 text-ink-400'
+                          }`}>
+                            {i + 1}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-dm text-ink-700 text-xs font-medium mb-0.5">{weekLabel(i)}</p>
+                            {weekDishes[i].length > 0
+                              ? <p className="font-dm text-ink-500 text-xs truncate">{weekDishes[i].join(' · ')}</p>
+                              : <p className="font-dm text-ink-300 text-xs">No dishes selected yet — click to add</p>
+                            }
+                          </div>
+                          {sub > 0 && (
+                            <p className="font-dm text-ink-700 text-xs font-medium shrink-0">${sub}</p>
+                          )}
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-dm text-ink-700 text-xs font-medium mb-0.5">{weekLabel(i)}</p>
-                          {weekDishes[i].length > 0
-                            ? <p className="font-dm text-ink-500 text-xs truncate">{weekDishes[i].join(' · ')}</p>
-                            : <p className="font-dm text-ink-300 text-xs">No dishes selected yet — click to add</p>
-                          }
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -357,9 +401,25 @@ export default function MonthlyPlanCheckout() {
             {step === 2 && (
               <div>
                 <h2 className="font-cormorant text-ink-900 text-2xl mb-1">Your details</h2>
-                <p className="font-dm text-ink-400 text-sm mb-8">
+                <p className="font-dm text-ink-400 text-sm mb-6">
                   We'll use this to confirm your schedule and send reminders.
                 </p>
+
+                {user ? (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-sm mb-6">
+                    <Check className="w-4 h-4 text-green-600 shrink-0" />
+                    <p className="font-dm text-green-800 text-sm">
+                      Signed in as <span className="font-medium">{user.email}</span> — fields pre-filled.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between px-4 py-3 bg-ink-50 border border-ink-200 rounded-sm mb-6">
+                    <p className="font-dm text-ink-600 text-sm">Have an account? Log in to pre-fill your details.</p>
+                    <Link to={createPageUrl('Login')} className="font-dm text-ink-900 text-sm font-medium underline underline-offset-2">
+                      Log in
+                    </Link>
+                  </div>
+                )}
                 <div className="space-y-5">
                   <div>
                     <Label className="font-dm text-ink-700 text-sm mb-1.5 block">Full name *</Label>
@@ -446,44 +506,48 @@ export default function MonthlyPlanCheckout() {
                 </p>
 
                 {/* Order summary */}
-                <div className="bg-white border border-ink-100 rounded-sm p-6 mb-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-cormorant text-ink-900 text-xl">{planName}</p>
-                      <p className="font-dm text-ink-400 text-xs">{plan.desc}</p>
-                    </div>
-                    <p className="font-cormorant text-ink-900 text-xl">
-                      {plan.price ? `$${plan.price}` : 'Custom'}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-ink-100 pt-4 space-y-3">
-                    <p className="font-dm text-ink-400 text-xs mb-2">Your monthly rotation</p>
-                    {Array.from({ length: numPickups }, (_, i) => (
-                      <div key={i} className="flex gap-3">
-                        <div className="w-5 h-5 rounded-sm bg-gold-100 text-gold-700 font-dm text-[10px] font-medium flex items-center justify-center shrink-0 mt-0.5">
-                          {i + 1}
-                        </div>
-                        <div>
-                          <p className="font-dm text-ink-500 text-xs">{weekLabel(i)}</p>
-                          <p className="font-dm text-ink-800 text-sm">{weekDishes[i].join(' · ')}</p>
-                        </div>
+                {(() => {
+                  const monthlyTotal = Array.from({ length: numPickups }, (_, i) => pickupTotal(weekDishes[i])).reduce((a, b) => a + b, 0);
+                  return (
+                  <div className="bg-white border border-ink-100 rounded-sm p-6 mb-6 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-cormorant text-ink-900 text-xl">{planName}</p>
+                        <p className="font-dm text-ink-400 text-xs">{plan.desc}</p>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-ink-100 pt-4">
-                    <p className="font-dm text-ink-400 text-xs mb-1">Preferred pickup days</p>
-                    <p className="font-dm text-ink-700 text-sm">{form.preferredDays.join(', ')}</p>
-                  </div>
-
-                  {plan.price && (
-                    <div className="border-t border-ink-100 pt-4 flex justify-between">
-                      <p className="font-dm text-ink-900 text-sm font-medium">First month (due now)</p>
-                      <p className="font-dm text-ink-900 text-sm font-medium">${plan.price}</p>
                     </div>
-                  )}
-                </div>
+
+                    <div className="border-t border-ink-100 pt-4 space-y-3">
+                      <p className="font-dm text-ink-400 text-xs mb-2">Your monthly rotation</p>
+                      {Array.from({ length: numPickups }, (_, i) => {
+                        const sub = pickupTotal(weekDishes[i]);
+                        return (
+                          <div key={i} className="flex gap-3 items-start">
+                            <div className="w-5 h-5 rounded-sm bg-gold-100 text-gold-700 font-dm text-[10px] font-medium flex items-center justify-center shrink-0 mt-0.5">
+                              {i + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-dm text-ink-500 text-xs">{weekLabel(i)}</p>
+                              <p className="font-dm text-ink-800 text-sm">{weekDishes[i].join(' · ')}</p>
+                            </div>
+                            {sub > 0 && <p className="font-dm text-ink-600 text-sm shrink-0">${sub}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="border-t border-ink-100 pt-4">
+                      <p className="font-dm text-ink-400 text-xs mb-1">Preferred pickup days</p>
+                      <p className="font-dm text-ink-700 text-sm">{form.preferredDays.join(', ')}</p>
+                    </div>
+
+                    <div className="border-t border-ink-100 pt-4 flex justify-between">
+                      <p className="font-dm text-ink-900 text-sm font-medium">Monthly total (due now)</p>
+                      <p className="font-dm text-ink-900 text-sm font-medium">${monthlyTotal}</p>
+                    </div>
+                  </div>
+                  );
+                })()}
 
                 {/* Payment method */}
                 <div className="mb-6">
@@ -517,18 +581,21 @@ export default function MonthlyPlanCheckout() {
                   </div>
                 </div>
 
-                {paymentMethod !== 'cash' && (
-                  <div className="bg-gold-50 border border-gold-200 rounded-sm p-4 mb-6">
-                    <p className="font-dm text-ink-700 text-sm font-medium mb-1">
-                      {paymentMethod === 'venmo' ? 'Paying via Venmo' : 'Paying via Zelle'}
-                    </p>
-                    <p className="font-dm text-ink-600 text-sm">
-                      {paymentMethod === 'venmo'
-                        ? `Send $${plan.price ?? '—'} to @oishiskitchen on Venmo. Add "${form.name} – ${planName}" in the note.`
-                        : `Send $${plan.price ?? '—'} to 781-579-4965 on Zelle. Add "${form.name} – ${planName}" in the memo.`}
-                    </p>
-                  </div>
-                )}
+                {(() => {
+                  const monthlyTotal = Array.from({ length: numPickups }, (_, i) => pickupTotal(weekDishes[i])).reduce((a, b) => a + b, 0);
+                  return paymentMethod !== 'cash' && (
+                    <div className="bg-gold-50 border border-gold-200 rounded-sm p-4 mb-6">
+                      <p className="font-dm text-ink-700 text-sm font-medium mb-1">
+                        {paymentMethod === 'venmo' ? 'Paying via Venmo' : 'Paying via Zelle'}
+                      </p>
+                      <p className="font-dm text-ink-600 text-sm">
+                        {paymentMethod === 'venmo'
+                          ? `Send $${monthlyTotal} to @oishiskitchen on Venmo. Add "${form.name} – ${planName}" in the note.`
+                          : `Send $${monthlyTotal} to 781-579-4965 on Zelle. Add "${form.name} – ${planName}" in the memo.`}
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <p className="font-dm text-ink-400 text-xs mb-6">
                   We'll contact you within 24 hours to confirm your first pickup date. No payment is charged online — you send it directly via your chosen method.

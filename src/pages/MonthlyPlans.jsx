@@ -9,27 +9,27 @@ const PLANS = [
   {
     name: 'Family Pack',
     tagline: 'Home-cooked, twice a month',
-    price: 'From $220',
-    period: '/month',
+    price: 'From $75',
+    period: '/week',
     highlight: false,
     perks: [
-      '2 pickups per month',
-      '2 dishes per pickup (serves 8)',
-      'Rotating seasonal menu',
+      '2 weeks per month',
+      '3 dishes per week (serves 8)',
+      'Different dishes each week',
       'WhatsApp scheduling',
     ],
   },
   {
     name: 'Weekly Feast',
     tagline: 'Fresh Bengali food every week',
-    price: 'From $380',
-    period: '/month',
+    price: 'From $75',
+    period: '/week',
     highlight: true,
     perks: [
-      '4 pickups per month (weekly)',
-      '2 dishes per pickup (serves 8)',
+      '4 weeks per month',
+      '3 dishes per week (serves 8)',
+      'Different dishes each week',
       'Priority scheduling',
-      'Menu planning + WhatsApp',
       'Save ~15% vs. single orders',
     ],
   },
@@ -49,12 +49,15 @@ const PLANS = [
   },
 ];
 
-const MENU_ITEMS = [
-  { category: 'Rice & Biryani', items: ['Beef Tehari', 'Beef Kacchi', 'Mutton Kacchi', 'Chicken Biryani', 'Pulao'] },
-  { category: 'Meat & Chicken', items: ['Chicken Roast', 'Beef Curry', 'Chicken Curry', 'Mutton Curry'] },
-  { category: 'Kebabs & Snacks', items: ['Chicken Shami Kebab', 'Beef Shami Kebab', 'Chicken Boti Kebab', 'Tuna Kebab', 'Shingara / Samosa'] },
-  { category: 'Vegetarian', items: ['Mixed Vegetable', 'Daal', 'Aloo Bhaji'] },
-  { category: 'Desserts', items: ['Payesh', 'Mishti Doi'] },
+const MAX_DISHES = 3;
+
+const PLAN_MENU = [
+  { name: 'Bhat',            desc: 'Steamed basmati rice',                 price: 20 },
+  { name: 'Mach',            desc: 'Bengali fish curry (Rohu)',             price: 45 },
+  { name: 'Chicken Curry',   desc: 'Home-style chicken in aromatic gravy',  price: 30 },
+  { name: 'Beef Curry',      desc: 'Slow-cooked beef in Bengali spices',    price: 40 },
+  { name: 'Mixed Veg',       desc: 'Seasonal vegetables in light curry',    price: 25 },
+  { name: 'Chicken Biryani', desc: 'Aromatic rice with spiced chicken',     price: 64 },
 ];
 
 const HOW_IT_WORKS = [
@@ -70,8 +73,15 @@ function DishSelector({ plan, highlight }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState([]);
 
-  const toggle = (dish) =>
-    setSelected((prev) => prev.includes(dish) ? prev.filter((d) => d !== dish) : [...prev, dish]);
+  const atMax = selected.length >= MAX_DISHES;
+
+  const toggle = (dish) => {
+    if (selected.includes(dish)) {
+      setSelected(prev => prev.filter(d => d !== dish));
+    } else if (!atMax) {
+      setSelected(prev => [...prev, dish]);
+    }
+  };
 
   const handleCheckout = () => {
     const params = new URLSearchParams({ plan: plan.name });
@@ -88,9 +98,9 @@ function DishSelector({ plan, highlight }) {
         }`}
       >
         <span className={`font-dm text-sm ${highlight ? 'text-ink-300' : 'text-ink-500'}`}>
-          {selected.length > 0 ? `${selected.length} dish${selected.length > 1 ? 'es' : ''} selected` : 'Choose your dishes'}
+          {selected.length > 0 ? `${selected.length} of ${MAX_DISHES} dishes selected` : `Choose ${MAX_DISHES} dishes`}
         </span>
-        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${highlight ? 'text-ink-400' : 'text-ink-400'}`} />
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''} text-ink-400`} />
       </button>
 
       <AnimatePresence>
@@ -102,37 +112,40 @@ function DishSelector({ plan, highlight }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className={`pb-4 space-y-4 max-h-64 overflow-y-auto pr-1 ${highlight ? 'text-ink-200' : 'text-ink-700'}`}>
-              {MENU_ITEMS.map(({ category, items }) => (
-                <div key={category}>
-                  <p className={`font-dm text-[10px] tracking-widest uppercase mb-2 ${highlight ? 'text-ink-500' : 'text-ink-400'}`}>
-                    {category}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {items.map((dish) => {
-                      const active = selected.includes(dish);
-                      return (
-                        <button
-                          key={dish}
-                          onClick={() => toggle(dish)}
-                          className={`font-dm text-xs px-3 py-1.5 rounded-sm border transition-colors duration-150 ${
-                            active
-                              ? highlight
-                                ? 'bg-gold-500 border-gold-500 text-ink-900'
-                                : 'bg-ink-900 border-ink-900 text-white'
-                              : highlight
-                                ? 'bg-transparent border-ink-600 text-ink-300 hover:border-ink-400'
-                                : 'bg-transparent border-ink-200 text-ink-600 hover:border-ink-400'
-                          }`}
-                        >
-                          {active && <Check className="w-3 h-3 inline mr-1" />}
-                          {dish}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+            <div className="pb-4 space-y-2">
+              {PLAN_MENU.map(({ name, desc, price }) => {
+                const active = selected.includes(name);
+                const locked = !active && atMax;
+                return (
+                  <button
+                    key={name}
+                    onClick={() => toggle(name)}
+                    disabled={locked}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-sm border text-left transition-all duration-150 ${
+                      active
+                        ? highlight
+                          ? 'bg-gold-500 border-gold-500 text-ink-900'
+                          : 'bg-ink-900 border-ink-900 text-white'
+                        : locked
+                          ? 'bg-transparent border-ink-800/30 text-ink-600/30 cursor-not-allowed'
+                          : highlight
+                            ? 'bg-transparent border-ink-700 text-ink-300 hover:border-ink-500'
+                            : 'bg-transparent border-ink-200 text-ink-600 hover:border-ink-400'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 ${
+                      active ? (highlight ? 'border-ink-900' : 'border-white') : 'border-current opacity-40'
+                    }`}>
+                      {active && <Check className="w-2.5 h-2.5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-dm text-xs font-medium">{name}</p>
+                      <p className={`font-dm text-[10px] ${active ? 'opacity-70' : 'opacity-60'}`}>{desc}</p>
+                    </div>
+                    <p className={`font-dm text-xs font-medium shrink-0 ${active ? '' : 'opacity-60'}`}>${price}</p>
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -146,8 +159,10 @@ function DishSelector({ plan, highlight }) {
             : 'bg-ink-900 hover:bg-ink-700 text-white'
         }`}
       >
-        {selected.length > 0 ? (
-          <><Check className="w-4 h-4" />{selected.length} dishes — Subscribe</>
+        {selected.length >= MAX_DISHES ? (
+          <><Check className="w-4 h-4" />{selected.join(', ')} — Subscribe</>
+        ) : selected.length > 0 ? (
+          <>Choose {MAX_DISHES - selected.length} more <ArrowRight className="w-4 h-4" /></>
         ) : (
           <>Subscribe <ArrowRight className="w-4 h-4" /></>
         )}
