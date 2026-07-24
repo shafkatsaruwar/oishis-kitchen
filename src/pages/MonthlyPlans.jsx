@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Check, MessageCircle, Phone, CalendarDays, Utensils, Heart, ChevronDown, ArrowRight } from 'lucide-react';
+import { Check, MessageCircle, Phone, CalendarDays, Utensils, Heart, ArrowRight } from 'lucide-react';
 import { createPageUrl } from '../utils';
 
 const PLANS = [
@@ -22,8 +22,8 @@ const PLANS = [
   {
     name: 'Weekly Feast',
     tagline: 'Fresh Bengali food every week',
-    price: 'From $75',
-    period: '/week',
+    price: 'From $100',
+    period: '/month',
     highlight: true,
     perks: [
       '4 weeks per month',
@@ -49,17 +49,6 @@ const PLANS = [
   },
 ];
 
-const MAX_DISHES = 3;
-
-const PLAN_MENU = [
-  { name: 'Bhat',            desc: 'Steamed basmati rice',                 price: 20 },
-  { name: 'Mach',            desc: 'Bengali fish curry (Rohu)',             price: 45 },
-  { name: 'Chicken Curry',   desc: 'Home-style chicken in aromatic gravy',  price: 30 },
-  { name: 'Beef Curry',      desc: 'Slow-cooked beef in Bengali spices',    price: 40 },
-  { name: 'Mixed Veg',       desc: 'Seasonal vegetables in light curry',    price: 25 },
-  { name: 'Chicken Biryani', desc: 'Aromatic rice with spiced chicken',     price: 64 },
-];
-
 const HOW_IT_WORKS = [
   { icon: MessageCircle, step: '01', title: 'Pick your plan', desc: 'Choose a plan, select your favourite dishes, and send us a WhatsApp — takes 2 minutes.' },
   { icon: CalendarDays,  step: '02', title: 'Lock in your schedule', desc: 'We agree on pickup days and a rolling menu. You get a reminder the day before each pickup.' },
@@ -68,106 +57,19 @@ const HOW_IT_WORKS = [
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
 
-function DishSelector({ plan, highlight }) {
+function SubscribeButton({ plan, highlight }) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState([]);
-
-  const atMax = selected.length >= MAX_DISHES;
-
-  const toggle = (dish) => {
-    if (selected.includes(dish)) {
-      setSelected(prev => prev.filter(d => d !== dish));
-    } else if (!atMax) {
-      setSelected(prev => [...prev, dish]);
-    }
-  };
-
-  const handleCheckout = () => {
-    const params = new URLSearchParams({ plan: plan.name });
-    if (selected.length > 0) params.set('dishes', selected.join(','));
-    navigate(createPageUrl('MonthlyPlanCheckout') + '?' + params.toString());
-  };
-
   return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between text-left px-0 py-3 border-t ${
-          highlight ? 'border-ink-700' : 'border-ink-100'
-        }`}
-      >
-        <span className={`font-dm text-sm ${highlight ? 'text-ink-300' : 'text-ink-500'}`}>
-          {selected.length > 0 ? `${selected.length} of ${MAX_DISHES} dishes selected` : `Choose ${MAX_DISHES} dishes`}
-        </span>
-        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''} text-ink-400`} />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="pb-4 space-y-2">
-              {PLAN_MENU.map(({ name, desc, price }) => {
-                const active = selected.includes(name);
-                const locked = !active && atMax;
-                return (
-                  <button
-                    key={name}
-                    onClick={() => toggle(name)}
-                    disabled={locked}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-sm border text-left transition-all duration-150 ${
-                      active
-                        ? highlight
-                          ? 'bg-gold-500 border-gold-500 text-ink-900'
-                          : 'bg-ink-900 border-ink-900 text-white'
-                        : locked
-                          ? 'bg-transparent border-ink-800/30 text-ink-600/30 cursor-not-allowed'
-                          : highlight
-                            ? 'bg-transparent border-ink-700 text-ink-300 hover:border-ink-500'
-                            : 'bg-transparent border-ink-200 text-ink-600 hover:border-ink-400'
-                    }`}
-                  >
-                    <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 ${
-                      active ? (highlight ? 'border-ink-900' : 'border-white') : 'border-current opacity-40'
-                    }`}>
-                      {active && <Check className="w-2.5 h-2.5" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-dm text-xs font-medium">{name}</p>
-                      <p className={`font-dm text-[10px] ${active ? 'opacity-70' : 'opacity-60'}`}>{desc}</p>
-                    </div>
-                    <p className={`font-dm text-xs font-medium shrink-0 ${active ? '' : 'opacity-60'}`}>${price}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Button
-        onClick={handleCheckout}
-        className={`w-full rounded-none h-11 font-dm font-medium text-sm tracking-wide gap-2 mt-3 ${
-          highlight
-            ? 'bg-gold-500 hover:bg-gold-400 text-ink-900'
-            : 'bg-ink-900 hover:bg-ink-700 text-white'
-        }`}
-      >
-        {selected.length >= MAX_DISHES ? (
-          <><Check className="w-4 h-4" />{selected.join(', ')} — Subscribe</>
-        ) : selected.length > 0 ? (
-          <>Choose {MAX_DISHES - selected.length} more <ArrowRight className="w-4 h-4" /></>
-        ) : (
-          <>Subscribe <ArrowRight className="w-4 h-4" /></>
-        )}
-      </Button>
-    </div>
+    <Button
+      onClick={() => navigate(createPageUrl('MonthlyPlanCheckout') + `?plan=${encodeURIComponent(plan.name)}`)}
+      className={`w-full rounded-none h-11 font-dm font-medium text-sm tracking-wide gap-2 ${
+        highlight
+          ? 'bg-gold-500 hover:bg-gold-400 text-ink-900'
+          : 'bg-ink-900 hover:bg-ink-700 text-white'
+      }`}
+    >
+      Subscribe <ArrowRight className="w-4 h-4" />
+    </Button>
   );
 }
 
@@ -237,7 +139,7 @@ export default function MonthlyPlans() {
               </ul>
 
               <div className="px-8 pb-8">
-                <DishSelector plan={plan} highlight={plan.highlight} />
+                <SubscribeButton plan={plan} highlight={plan.highlight} />
               </div>
             </motion.div>
           ))}

@@ -28,6 +28,7 @@ const PLAN_MENU = [
   { name: 'Beef Curry',      desc: 'Slow-cooked beef in Bengali spices',    price: 40 },
   { name: 'Mixed Veg',       desc: 'Seasonal vegetables in light curry',    price: 25 },
   { name: 'Chicken Biryani', desc: 'Aromatic rice with spiced chicken',     price: 64 },
+  { name: 'Daal',            desc: 'Home-style lentils',                    price: 24 },
 ];
 
 const DISH_PRICES = Object.fromEntries(PLAN_MENU.map(d => [d.name, d.price]));
