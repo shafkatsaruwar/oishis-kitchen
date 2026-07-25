@@ -29,7 +29,7 @@ export default function MonthlyPlans() {
   const planName = frequency === 2 ? 'Family Pack' : 'Weekly Feast';
 
   const handleSubscribe = () => {
-    navigate(createPageUrl('MonthlyPlanCheckout') + `?plan=${encodeURIComponent(planName)}`);
+    navigate(createPageUrl('MonthlyPlanCheckout') + `?plan=${encodeURIComponent(planName)}&menu=${selectedMenuId}`);
   };
 
   return (

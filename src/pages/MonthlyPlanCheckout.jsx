@@ -158,8 +158,10 @@ export default function MonthlyPlanCheckout() {
   const plan = PLAN_DATA[planName] || PLAN_DATA['Family Pack'];
   const numPickups = plan.pickups;
 
+  const preselectedMenuId = Number(searchParams.get('menu')) || null;
+
   const [weekMenus, setWeekMenus] = useState(
-    Object.fromEntries(Array.from({ length: numPickups }, (_, i) => [i, null]))
+    Object.fromEntries(Array.from({ length: numPickups }, (_, i) => [i, preselectedMenuId]))
   );
   const [weekAddons, setWeekAddons] = useState(
     Object.fromEntries(Array.from({ length: numPickups }, (_, i) => [i, []]))
