@@ -153,7 +153,7 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
               {/* Price */}
               <div className="text-center">
                 <p className="text-cyan-600 text-3xl font-bold">${servingTotal.toFixed(2)}</p>
-                <p className="text-gray-500 text-sm mt-1">${basePrice.toFixed(2)} per serving</p>
+                <p className="text-gray-500 text-sm mt-1">${basePrice.toFixed(2)} per meal</p>
                 {item.minQty > 1 &&
                   <Badge variant="outline" className="mt-2 bg-amber-50 text-amber-700 border-amber-400 font-medium">
                     Min. order: {item.minQty}
@@ -215,7 +215,7 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
 
               {/* Quantity */}
               <div>
-                <label className="text-gray-700 mb-3 text-sm font-semibold block">Quantity (servings):</label>
+                <label className="text-gray-700 mb-3 text-sm font-semibold block">Quantity (meals):</label>
                 <div className="flex items-center justify-center gap-4">
                   <Button
                     size="icon"
