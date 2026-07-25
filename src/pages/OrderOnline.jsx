@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import ItemCustomizationModal from '../components/ordering/ItemCustomizationModal';
 
+const DEFAULT_MIN_QTY = 8;
+
 const menuCategories = [
 {
   category: 'Signature Biryani & Rice Dishes',
@@ -18,9 +20,9 @@ const menuCategories = [
   items: [
   {
     name: 'Biryani',
-    description: 'Aromatic rice dish with your choice of protein - a celebration favorite. Minimum quantity is 8.',
+    description: 'Aromatic rice dish with your choice of protein - a celebration favorite.',
     price: 7.99,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 3,
     options: [
     { name: 'Chicken', price: 7.99 },
@@ -35,9 +37,9 @@ const menuCategories = [
   },
   {
     name: 'Pulao',
-    description: 'Fragrant spiced rice. Minimum quantity is 8.',
+    description: 'Fragrant spiced rice.',
     price: 2.99,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 1,
     options: [
     { name: 'Regular', price: 2.99 },
@@ -47,7 +49,7 @@ const menuCategories = [
     name: 'Desi Style Fried Rice',
     description: 'Desi-style fried rice with your choice of protein.',
     price: 5.99,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 1,
     options: [
     { name: 'Chicken', price: 6.99 },
@@ -64,7 +66,7 @@ const menuCategories = [
     name: 'Beef Curry',
     description: 'Beef curry cooked to perfection. Will remind of home.',
     price: 4.99,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 2,
     options: [
     { name: 'Regular', price: 4.99 },
@@ -75,33 +77,33 @@ const menuCategories = [
   },
   {
     name: 'Chicken Roast',
-    description: 'Perfectly spiced chicken pieces in rich gravy. $3.25 per piece. Minimum 8 pieces.',
+    description: 'Perfectly spiced chicken pieces in rich gravy. $3.25 per piece.',
     price: 3.25,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 2,
   },
   {
     name: 'Chicken Yellow Curry',
-    description: 'Mild, aromatic chicken curry. Minimum quantity is 8.',
+    description: 'Mild, aromatic chicken curry.',
     price: 2.99,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 1,
     options: [
     { name: 'Hard Chicken (per 2 pieces)', price: 2.99 },
     { name: 'Whole Chicken', price: 34.99 }]
   },
-  { name: 'Egg Korma', description: 'Boiled eggs in creamy korma sauce. Minimum quantity is 8.', price: 1.99, minQty: 8, spice: 2 },
-  { name: 'Fish Curry (Rohu)', description: 'Traditional Bengali fish curry. Minimum quantity is 8.', price: 5.29, minQty: 8, spice: 2 },
-  { name: 'Fish Fillet Curry', description: 'Fish fillet in aromatic curry sauce.', price: 5.25, minQty: 8, spice: 2 },
-  { name: 'Fish Bhuna/Dopyaja', description: 'Fish with caramelized onions.', price: 5.25, minQty: 8, spice: 2 },
-  { name: 'Fish Curry w/ Vegetables', description: 'Fish curry with cauliflower, eggplant, and potatoes.', price: 7.49, minQty: 8, spice: 2 },
-  { name: 'Kachki Mach', description: 'Small fish curry - Bengali specialty.', price: 2.99, minQty: 8, spice: 2 },
-  { name: 'Daal', description: 'Home-style lentils. Price is $2.99. Minimum quantity is 8.', price: 2.99, minQty: 8, spice: 1 },
+  { name: 'Egg Korma', description: 'Boiled eggs in creamy korma sauce.', price: 1.99, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Fish Curry (Rohu)', description: 'Traditional Bengali fish curry.', price: 5.29, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Fish Fillet Curry', description: 'Fish fillet in aromatic curry sauce.', price: 5.25, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Fish Bhuna/Dopyaja', description: 'Fish with caramelized onions.', price: 5.25, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Fish Curry w/ Vegetables', description: 'Fish curry with cauliflower, eggplant, and potatoes.', price: 7.49, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Kachki Mach', description: 'Small fish curry - Bengali specialty.', price: 2.99, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Daal', description: 'Home-style lentils.', price: 2.99, minQty: DEFAULT_MIN_QTY, spice: 1 },
   {
     name: 'Mixed Vegetable',
-    description: 'Seasonal vegetables in light curry. Minimum quantity 8.',
+    description: 'Seasonal vegetables in light curry.',
     price: 3.99,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 1,
     trayOptions: [
     { name: 'Mixed Vegetable', label: 'Full Tray', price: 120 },
@@ -112,12 +114,12 @@ const menuCategories = [
   category: 'Kebabs & Grilled',
   icon: '🍢',
   items: [
-  { name: 'Beef Koobideh', description: 'Grilled beef skewers served with rice. Minimum quantity is 8.', price: 18.99, minQty: 8, spice: 2 },
+  { name: 'Beef Koobideh', description: 'Grilled beef skewers served with rice.', price: 18.99, minQty: DEFAULT_MIN_QTY, spice: 2 },
   {
     name: 'Kebab',
     description: 'Delicious kebabs with your choice of protein.',
     price: 2.25,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 2,
     options: [
     { name: 'Chicken Shami Kebab', price: 2.25 },
@@ -130,22 +132,22 @@ const menuCategories = [
   category: 'Appetizers & Snacks',
   icon: '🥟',
   items: [
-  { name: 'Shingara/Samosa', description: 'Crispy pastry filled with spiced vegetables.', price: 1.99, minQty: 8, spice: 1 },
-  { name: 'Egg Aloo Chop', description: 'Egg and potato croquettes.', price: 1.99, minQty: 8, spice: 1 },
-  { name: 'Vegetable Pakoda', description: 'Mixed vegetable fritters. Minimum quantity is 8.', price: 2.25, minQty: 8, spice: 1 },
-  { name: 'Fish Fillet Fry', description: 'Crispy fried fish fillets. Minimum quantity is 8.', price: 3.25, minQty: 8, spice: 1 },
-  { name: 'Chicken Kofta', description: 'Spiced chicken meatballs.', price: 2.25, minQty: 8, spice: 1 }]
+  { name: 'Shingara/Samosa', description: 'Crispy pastry filled with spiced vegetables.', price: 1.99, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  { name: 'Egg Aloo Chop', description: 'Egg and potato croquettes.', price: 1.99, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  { name: 'Vegetable Pakoda', description: 'Mixed vegetable fritters.', price: 2.25, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  { name: 'Fish Fillet Fry', description: 'Crispy fried fish fillets.', price: 3.25, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  { name: 'Chicken Kofta', description: 'Spiced chicken meatballs.', price: 2.25, minQty: DEFAULT_MIN_QTY, spice: 1 }]
 },
 {
   category: 'Sides & Bhorta',
   icon: '🥗',
   items: [
-  { name: 'Plain Rice', description: 'Steamed white rice. Minimum quantity is 8.', price: 2.00, minQty: 8, spice: 0 },
+  { name: 'Plain Rice', description: 'Steamed white rice.', price: 2.00, minQty: DEFAULT_MIN_QTY, spice: 0 },
   {
     name: 'Bhorta',
-    description: 'Traditional mashed dishes with your choice. Minimum quantity is 8.',
+    description: 'Traditional mashed dishes with your choice.',
     price: 2.50,
-    minQty: 8,
+    minQty: DEFAULT_MIN_QTY,
     spice: 2,
     options: [
     { name: 'Broccoli', price: 2.50 },
@@ -161,8 +163,8 @@ const menuCategories = [
   category: 'Desserts & Sweets',
   icon: '🍮',
   items: [
-  { name: 'Bengali Roshmalai', description: 'Small milk curd balls dipped in 4 kinds of milk. Minimum quantity is 8.', price: 2.99, minQty: 8, spice: 0 },
-  { name: 'Bengali Roshogolla', description: 'Milk curd balls dipped in sugar syrup. Minimum quantity is 8.', price: 1.99, minQty: 8, spice: 0 },
+  { name: 'Bengali Roshmalai', description: 'Small milk curd balls dipped in 4 kinds of milk.', price: 2.99, minQty: DEFAULT_MIN_QTY, spice: 0 },
+  { name: 'Bengali Roshogolla', description: 'Milk curd balls dipped in sugar syrup.', price: 1.99, minQty: DEFAULT_MIN_QTY, spice: 0 },
   { name: 'Jorda (Half Tray)', description: 'Sweet yellow rice with saffron and nuts.', price: 50.00, minQty: 1, spice: 0 },
   { name: 'Payesh (Full Tray)', description: 'Traditional rice pudding with milk.', price: 84.99, minQty: 1, spice: 0 }]
 },
@@ -170,7 +172,7 @@ const menuCategories = [
   category: 'Beverages',
   icon: '🥤',
   items: [
-  { name: 'Borhani', description: 'Traditional spiced yogurt drink - perfect with biryani. Minimum quantity is 8.', price: 3.99, minQty: 8, spice: 0 }]
+  { name: 'Borhani', description: 'Traditional spiced yogurt drink - perfect with biryani.', price: 3.99, minQty: DEFAULT_MIN_QTY, spice: 0 }]
 }];
 
 
