@@ -15,6 +15,17 @@ const DEFAULT_MIN_QTY = 1;
 
 const menuCategories = [
 {
+  category: 'Set Menus',
+  icon: '🍱',
+  items: [
+  { name: 'Set Menu No. 1', description: 'Bhat, Chicken Curry & Mixed Veg.', price: 15.00, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  { name: 'Set Menu No. 2', description: 'Bhat, Beef Curry & Mixed Veg.', price: 18.00, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Set Menu No. 3', description: 'Bhat, Fish Curry (Rohu) & Mixed Veg.', price: 16.00, minQty: DEFAULT_MIN_QTY, spice: 2 },
+  { name: 'Daal (Add-on)', description: 'Home-style lentils — add to any set menu.', price: 3.00, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  { name: 'Aloo Bhorta (Add-on)', description: 'Mashed potato — add to any set menu.', price: 2.99, minQty: DEFAULT_MIN_QTY, spice: 1 },
+  ]
+},
+{
   category: 'Signature Biryani & Rice Dishes',
   icon: '🍚',
   items: [
