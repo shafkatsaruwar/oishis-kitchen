@@ -13,8 +13,8 @@ import emailjs from '@emailjs/browser';
 import { Check, ChevronRight, ChevronLeft, CalendarDays, CreditCard, Utensils } from 'lucide-react';
 
 const PLAN_DATA = {
-  'Family Pack':        { pickups: 2, desc: '2 weeks/month · set menu per week · serves 8' },
-  'Weekly Feast':       { pickups: 4, desc: '4 weeks/month · set menu per week · serves 8' },
+  'Family Pack':        { pickups: 2, desc: '2 weeks/month · set menu per week' },
+  'Weekly Feast':       { pickups: 4, desc: '4 weeks/month · set menu per week' },
   'Corporate & Custom': { pickups: 4, desc: 'Flexible weeks · custom quantities' },
 };
 

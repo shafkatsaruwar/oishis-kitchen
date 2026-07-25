@@ -14,7 +14,7 @@ const PLANS = [
     highlight: false,
     perks: [
       '2 weeks per month',
-      '3 dishes per week (serves 8)',
+      'Set menu per week (per serving)',
       'Different dishes each week',
       'WhatsApp scheduling',
     ],
@@ -27,7 +27,7 @@ const PLANS = [
     highlight: true,
     perks: [
       '4 weeks per month',
-      '3 dishes per week (serves 8)',
+      'Set menu per week (per serving)',
       'Different dishes each week',
       'Priority scheduling',
       'Save ~15% vs. single orders',
