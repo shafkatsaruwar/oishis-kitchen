@@ -140,7 +140,7 @@ const menuCategories = [
   category: 'Sides & Bhorta',
   icon: '🥗',
   items: [
-  { name: 'Plain Rice', description: 'Steamed white rice.', price: 2.00, minQty: 1, spice: 0 },
+  { name: 'Plain Rice', description: 'Steamed white rice. Minimum quantity is 8.', price: 2.00, minQty: 8, spice: 0 },
   {
     name: 'Bhorta',
     description: 'Traditional mashed dishes with your choice. Minimum quantity is 8.',
@@ -170,7 +170,7 @@ const menuCategories = [
   category: 'Beverages',
   icon: '🥤',
   items: [
-  { name: 'Borhani', description: 'Traditional spiced yogurt drink - perfect with biryani.', price: 3.99, minQty: 1, spice: 0 }]
+  { name: 'Borhani', description: 'Traditional spiced yogurt drink - perfect with biryani. Minimum quantity is 8.', price: 3.99, minQty: 8, spice: 0 }]
 }];
 
 
