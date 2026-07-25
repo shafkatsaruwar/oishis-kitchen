@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import ItemCustomizationModal from '../components/ordering/ItemCustomizationModal';
 
-const DEFAULT_MIN_QTY = 8;
+const DEFAULT_MIN_QTY = 1;
 
 const menuCategories = [
 {
