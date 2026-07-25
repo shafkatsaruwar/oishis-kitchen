@@ -140,6 +140,7 @@ const menuCategories = [
   category: 'Sides & Bhorta',
   icon: '🥗',
   items: [
+  { name: 'Plain Rice', description: 'Steamed white rice.', price: 2.00, minQty: 1, spice: 0 },
   {
     name: 'Bhorta',
     description: 'Traditional mashed dishes with your choice. Minimum quantity is 8.',
