@@ -19,9 +19,9 @@ const PLAN_DATA = {
 };
 
 const SET_MENUS = [
-  { id: 1, name: 'Set Menu No. 1', items: 'Bhat, Chicken Curry & Mixed Veg', price: 15 },
-  { id: 2, name: 'Set Menu No. 2', items: 'Bhat, Beef Curry & Mixed Veg',    price: 18 },
-  { id: 3, name: 'Set Menu No. 3', items: 'Bhat, Fish Curry (Rohu) & Mixed Veg', price: 16 },
+  { id: 1, name: 'Set Menu No. 1', items: 'Bhat, Chicken Curry & Mixed Veg',      price: 15 },
+  { id: 2, name: 'Set Menu No. 2', items: 'Bhat, Fish Curry (Rohu) & Mixed Veg', price: 16 },
+  { id: 3, name: 'Set Menu No. 3', items: 'Bhat, Beef Curry & Mixed Veg',         price: 18 },
 ];
 
 const ADDONS = [
@@ -71,10 +71,10 @@ function StepBar({ current }) {
   );
 }
 
-const weekTotal = (menuId, addons) => {
+const weekTotal = (menuId, addons, meals = 1) => {
   const menu = SET_MENUS.find(m => m.id === menuId);
-  const menuPrice = menu?.price ?? 0;
-  const addonPrice = addons.reduce((sum, a) => sum + (ADDONS.find(ad => ad.name === a)?.price ?? 0), 0);
+  const menuPrice = (menu?.price ?? 0) * meals;
+  const addonPrice = addons.reduce((sum, a) => sum + (ADDONS.find(ad => ad.name === a)?.price ?? 0), 0) * meals;
   return menuPrice + addonPrice;
 };
 
@@ -159,6 +159,7 @@ export default function MonthlyPlanCheckout() {
   const numPickups = plan.pickups;
 
   const preselectedMenuId = Number(searchParams.get('menu')) || null;
+  const mealsPerWeek = parseInt(searchParams.get('meals')) || 7;
 
   const [weekMenus, setWeekMenus] = useState(
     Object.fromEntries(Array.from({ length: numPickups }, (_, i) => [i, preselectedMenuId]))
@@ -226,14 +227,14 @@ export default function MonthlyPlanCheckout() {
       const orderNumber = `MP-${Date.now().toString().slice(-6)}`;
 
       const monthlyTotal = Array.from({ length: numPickups }, (_, i) =>
-        weekTotal(weekMenus[i], weekAddons[i])
+        weekTotal(weekMenus[i], weekAddons[i], mealsPerWeek)
       ).reduce((a, b) => a + b, 0);
 
       const menuSchedule = Array.from({ length: numPickups }, (_, i) => {
         const menu = SET_MENUS.find(m => m.id === weekMenus[i]);
         const addons = weekAddons[i];
-        const total = weekTotal(weekMenus[i], weekAddons[i]);
-        return `${weekLabel(i)}: ${menu?.name}${addons.length ? ` + ${addons.join(', ')}` : ''} ($${total})`;
+        const total = weekTotal(weekMenus[i], weekAddons[i], mealsPerWeek);
+        return `${weekLabel(i)}: ${menu?.name}${addons.length ? ` + ${addons.join(', ')}` : ''} · ${mealsPerWeek} meals ($${total})`;
       }).join('\n');
 
       const itemsForOrder = Array.from({ length: numPickups }, (_, i) => {
@@ -242,12 +243,12 @@ export default function MonthlyPlanCheckout() {
         const rows = [{
           name: `${weekLabel(i)}: ${menu?.name}`,
           price: menu?.price ?? 0,
-          quantity: 1,
+          quantity: mealsPerWeek,
           special_instructions: menu?.items ?? '',
         }];
         addons.forEach(a => {
           const ad = ADDONS.find(x => x.name === a);
-          if (ad) rows.push({ name: `${weekLabel(i)}: ${a} (Add-on)`, price: ad.price, quantity: 1, special_instructions: '' });
+          if (ad) rows.push({ name: `${weekLabel(i)}: ${a} (Add-on)`, price: ad.price, quantity: mealsPerWeek, special_instructions: '' });
         });
         return rows;
       }).flat();
@@ -313,7 +314,7 @@ export default function MonthlyPlanCheckout() {
           <h1 className="font-cormorant font-light text-ink-900 text-4xl">
             Choose your set menu
           </h1>
-          <p className="font-dm text-ink-400 text-sm mt-1">{plan.desc}</p>
+          <p className="font-dm text-ink-400 text-sm mt-1">{plan.desc} · {mealsPerWeek} meals/week</p>
         </div>
 
         <StepBar current={step} />
@@ -358,7 +359,7 @@ export default function MonthlyPlanCheckout() {
                         {weekLabel(i)}
                         {chosen && (
                           <span className={`text-xs ${active ? 'text-white/60' : 'text-ink-400'}`}>
-                            · ${weekTotal(weekMenus[i], weekAddons[i])}
+                            · ${weekTotal(weekMenus[i], weekAddons[i], mealsPerWeek)}
                           </span>
                         )}
                       </button>
@@ -381,7 +382,7 @@ export default function MonthlyPlanCheckout() {
                     {Array.from({ length: numPickups }, (_, i) => {
                       const menu = SET_MENUS.find(m => m.id === weekMenus[i]);
                       const addons = weekAddons[i];
-                      const total = weekTotal(weekMenus[i], weekAddons[i]);
+                      const total = weekTotal(weekMenus[i], weekAddons[i], mealsPerWeek);
                       return (
                         <div
                           key={i}
@@ -527,7 +528,7 @@ export default function MonthlyPlanCheckout() {
             {/* ── Step 3: Pay ── */}
             {step === 3 && (() => {
               const monthlyTotal = Array.from({ length: numPickups }, (_, i) =>
-                weekTotal(weekMenus[i], weekAddons[i])
+                weekTotal(weekMenus[i], weekAddons[i], mealsPerWeek)
               ).reduce((a, b) => a + b, 0);
               return (
                 <div>
@@ -548,7 +549,7 @@ export default function MonthlyPlanCheckout() {
                       {Array.from({ length: numPickups }, (_, i) => {
                         const menu = SET_MENUS.find(m => m.id === weekMenus[i]);
                         const addons = weekAddons[i];
-                        const total = weekTotal(weekMenus[i], weekAddons[i]);
+                        const total = weekTotal(weekMenus[i], weekAddons[i], mealsPerWeek);
                         return (
                           <div key={i} className="flex gap-3 items-start">
                             <div className="w-5 h-5 rounded-sm bg-gold-100 text-gold-700 font-dm text-[10px] font-medium flex items-center justify-center shrink-0 mt-0.5">

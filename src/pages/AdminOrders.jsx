@@ -218,7 +218,12 @@ export default function AdminOrders() {
                       <div className="flex items-center gap-2 text-gray-900">
                         <Calendar className="w-4 h-4 text-cyan-600" />
                         <span className="font-semibold">
-                          {format(new Date(order.pickup_date), 'MMM dd, yyyy')}
+                          {(() => {
+                            const d = new Date(order.pickup_date);
+                            return isNaN(d.getTime())
+                              ? order.pickup_date
+                              : format(d, 'MMM dd, yyyy');
+                          })()}
                         </span>
                       </div>
                       <p className="text-gray-700 ml-6 mt-1 font-medium">{order.pickup_time}</p>

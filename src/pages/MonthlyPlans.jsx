@@ -6,9 +6,9 @@ import { Check, MessageCircle, Phone, CalendarDays, Utensils, Heart, ArrowRight 
 import { createPageUrl } from '../utils';
 
 const SET_MENUS = [
-  { id: 1, name: 'Set Menu No. 1', items: ['Bhat', 'Chicken Curry', 'Mixed Veg'], price: 15 },
-  { id: 2, name: 'Set Menu No. 2', items: ['Bhat', 'Beef Curry', 'Mixed Veg'],    price: 18 },
-  { id: 3, name: 'Set Menu No. 3', items: ['Bhat', 'Fish Curry (Rohu)', 'Mixed Veg'], price: 16 },
+  { id: 1, name: 'Set Menu No. 1', items: ['Bhat', 'Chicken Curry', 'Mixed Veg'],    price: 15 },
+  { id: 2, name: 'Set Menu No. 2', items: ['Bhat', 'Fish Curry (Rohu)', 'Mixed Veg'], price: 16 },
+  { id: 3, name: 'Set Menu No. 3', items: ['Bhat', 'Beef Curry', 'Mixed Veg'],        price: 18 },
 ];
 
 const HOW_IT_WORKS = [
@@ -22,14 +22,15 @@ const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0
 export default function MonthlyPlans() {
   const navigate = useNavigate();
   const [frequency, setFrequency] = useState(4);
+  const [mealsPerWeek, setMealsPerWeek] = useState(7);
   const [selectedMenuId, setSelectedMenuId] = useState(null);
 
   const selectedMenu = SET_MENUS.find(m => m.id === selectedMenuId);
-  const monthlyTotal = selectedMenu ? selectedMenu.price * frequency : null;
+  const monthlyTotal = selectedMenu ? selectedMenu.price * mealsPerWeek * frequency : null;
   const planName = frequency === 2 ? 'Family Pack' : 'Weekly Feast';
 
   const handleSubscribe = () => {
-    navigate(createPageUrl('MonthlyPlanCheckout') + `?plan=${encodeURIComponent(planName)}&menu=${selectedMenuId}`);
+    navigate(createPageUrl('MonthlyPlanCheckout') + `?plan=${encodeURIComponent(planName)}&menu=${selectedMenuId}&meals=${mealsPerWeek}`);
   };
 
   return (
@@ -100,10 +101,32 @@ export default function MonthlyPlans() {
             </div>
           </motion.div>
 
-          {/* Step 2 — Set menu */}
-          <motion.div {...fadeUp} transition={{ duration: 0.5, delay: 0.2 }} className="mb-8">
+          {/* Step 2 — Meals per week */}
+          <motion.div {...fadeUp} transition={{ duration: 0.5, delay: 0.15 }} className="mb-10">
             <p className="font-dm text-ink-700 text-sm font-medium mb-3">
               <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-ink-900 text-white text-[10px] font-dm mr-2">2</span>
+              How many meals per week?
+            </p>
+            <div className="flex items-center gap-4 px-5 py-5 bg-white border-2 border-ink-200 rounded-sm">
+              <button
+                onClick={() => setMealsPerWeek(Math.max(1, mealsPerWeek - 1))}
+                className="w-9 h-9 rounded-sm border border-ink-200 flex items-center justify-center text-ink-600 hover:border-ink-400 transition-colors text-lg font-light"
+              >−</button>
+              <div className="flex-1 text-center">
+                <p className="font-cormorant text-ink-900 text-4xl font-light leading-none">{mealsPerWeek}</p>
+                <p className="font-dm text-ink-400 text-xs mt-1">meals / week</p>
+              </div>
+              <button
+                onClick={() => setMealsPerWeek(mealsPerWeek + 1)}
+                className="w-9 h-9 rounded-sm border border-ink-200 flex items-center justify-center text-ink-600 hover:border-ink-400 transition-colors text-lg font-light"
+              >+</button>
+            </div>
+          </motion.div>
+
+          {/* Step 3 — Set menu */}
+          <motion.div {...fadeUp} transition={{ duration: 0.5, delay: 0.2 }} className="mb-8">
+            <p className="font-dm text-ink-700 text-sm font-medium mb-3">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-ink-900 text-white text-[10px] font-dm mr-2">3</span>
               Choose your set menu
             </p>
             <div className="space-y-3">
@@ -163,9 +186,15 @@ export default function MonthlyPlans() {
                 )}
               </div>
               {selectedMenu && (
-                <div className="border-t border-ink-100 pt-3 flex items-center justify-between">
-                  <p className="font-dm text-ink-500 text-xs">{selectedMenu.name} × {frequency} weeks</p>
-                  <p className="font-dm text-ink-400 text-xs">${selectedMenu.price}/serving</p>
+                <div className="border-t border-ink-100 pt-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-dm text-ink-500 text-xs">{selectedMenu.name}</p>
+                    <p className="font-dm text-ink-400 text-xs">${selectedMenu.price}/meal</p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="font-dm text-ink-400 text-xs">{mealsPerWeek} meals × {frequency} weeks</p>
+                    <p className="font-dm text-ink-400 text-xs">${selectedMenu.price * mealsPerWeek}/week</p>
+                  </div>
                 </div>
               )}
             </div>
