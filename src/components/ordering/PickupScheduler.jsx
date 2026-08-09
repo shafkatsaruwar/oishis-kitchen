@@ -64,16 +64,15 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   };
 
-  // Check if date is available (Saturday or Sunday, and meets lead time)
+  // Check if date is available (Mon–Sat, meets lead time)
   const isDateAvailable = (date) => {
     const dayOfWeek = date.getDay();
-    const isSatOrSun = dayOfWeek === 0 || dayOfWeek === 6;
-    
-    // Check minimum lead time
+    const isMonToSat = dayOfWeek >= 1 && dayOfWeek <= 6;
+
     const minDateTime = new Date();
     minDateTime.setHours(minDateTime.getHours() + MIN_LEAD_TIME_HOURS);
-    
-    return isSatOrSun && isAfter(date, minDateTime);
+
+    return isMonToSat && isAfter(date, minDateTime);
   };
 
   // Check if time slot is available
@@ -178,7 +177,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
           <div className="flex items-center gap-4 mt-6 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-50 border-2 border-green-300 rounded"></div>
-              <span className="text-gray-600">Available (Sat/Sun)</span>
+              <span className="text-gray-600">Available (Mon–Sat)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-rose-600 rounded"></div>
