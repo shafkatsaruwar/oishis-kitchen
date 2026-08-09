@@ -12,7 +12,7 @@ export default function MobileMenu({ user, isAdmin, onLogout, transparent = fals
   const menuItems = [
     { name: 'Home', path: 'Home', icon: Home },
     { name: 'About', path: 'About', icon: User },
-    { name: 'Monthly Plans', path: 'MonthlyPlans', icon: CalendarDays },
+    // { name: 'Monthly Plans', path: 'MonthlyPlans', icon: CalendarDays },
     { name: 'Gallery', path: 'Gallery', icon: Image },
     { name: 'Reviews', path: 'Reviews', icon: Star },
     { name: 'Hey There!', path: 'Contact', icon: Phone },

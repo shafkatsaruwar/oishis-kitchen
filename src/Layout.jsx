@@ -67,7 +67,7 @@ function LayoutContent({ children, currentPageName }) {
               {[
                 { label: 'Home', page: 'Home' },
                 { label: 'About', page: 'About' },
-                { label: 'Monthly Plans', page: 'MonthlyPlans' },
+                // { label: 'Monthly Plans', page: 'MonthlyPlans' },
                 { label: 'Gallery', page: 'Gallery' },
                 { label: 'Reviews', page: 'Reviews' },
                 { label: 'Hey There!', page: 'Contact' },

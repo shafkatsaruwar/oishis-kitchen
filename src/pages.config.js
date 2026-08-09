@@ -14,8 +14,8 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import OrderOnline from './pages/OrderOnline';
 import Reviews from './pages/Reviews';
 import TrackOrder from './pages/TrackOrder';
-import MonthlyPlans from './pages/MonthlyPlans';
-import MonthlyPlanCheckout from './pages/MonthlyPlanCheckout';
+// import MonthlyPlans from './pages/MonthlyPlans';
+// import MonthlyPlanCheckout from './pages/MonthlyPlanCheckout';
 import __Layout from './Layout.jsx';
 
 
@@ -35,8 +35,8 @@ export const PAGES = {
     "MyOrders": MyOrders,
     "OrderConfirmation": OrderConfirmation,
     "OrderOnline": OrderOnline,
-    "MonthlyPlans": MonthlyPlans,
-    "MonthlyPlanCheckout": MonthlyPlanCheckout,
+    // "MonthlyPlans": MonthlyPlans,
+    // "MonthlyPlanCheckout": MonthlyPlanCheckout,
     "Reviews": Reviews,
     "TrackOrder": TrackOrder,
 }
