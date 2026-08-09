@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,10 @@ import ItemCustomizationModal from '../components/ordering/ItemCustomizationModa
 
 const DEFAULT_MIN_QTY = 1;
 
-const menuCategories = [
+// Menu is now managed from the iOS admin app and stored in Supabase.
+// The old hardcoded array has been replaced by a live fetch below.
+
+const _PLACEHOLDER = [
 {
   category: 'Signature Biryani & Rice Dishes',
   icon: '🍚',
@@ -175,12 +179,53 @@ const menuCategories = [
   { name: 'Borhani', description: 'Traditional spiced yogurt drink - perfect with biryani.', price: 3.99, minQty: DEFAULT_MIN_QTY, spice: 0 }]
 }];
 
-
 export default function OrderOnline() {
   const { addToCart, getCartCount } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [loadingMenu, setLoadingMenu] = useState(true);
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*')
+          .eq('is_available', true)
+          .order('category_order')
+          .order('display_order');
+        if (error) throw error;
+        // Group rows by category, preserving order
+        const grouped = {};
+        const order = [];
+        data.forEach(row => {
+          if (!grouped[row.category]) {
+            grouped[row.category] = { category: row.category, icon: row.category_icon, items: [] };
+            order.push(row.category);
+          }
+          grouped[row.category].items.push({
+            name: row.name,
+            description: row.description,
+            price: row.price,
+            minQty: row.min_qty,
+            spice: row.spice_level,
+            options: row.options,
+            trayOptions: row.tray_options,
+          });
+        });
+        setMenuCategories(order.map(k => grouped[k]));
+      } catch (err) {
+        console.error('Menu fetch failed:', err);
+        // Fall back to hardcoded data so the page still works
+        setMenuCategories(_PLACEHOLDER);
+      } finally {
+        setLoadingMenu(false);
+      }
+    };
+    fetchMenu();
+  }, []);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
@@ -256,6 +301,14 @@ export default function OrderOnline() {
         </motion.div>
 
         {/* Menu Items */}
+        {loadingMenu ? (
+          <div className="flex justify-center py-24">
+            <div className="flex flex-col items-center gap-4 text-gray-500">
+              <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-lg">Loading menu…</p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-16">
           {filteredCategories.map((category, catIdx) =>
           <motion.div
@@ -325,6 +378,7 @@ export default function OrderOnline() {
             </motion.div>
           )}
         </div>
+        )}
 
         {/* Item Customization Modal */}
         <ItemCustomizationModal
