@@ -6,8 +6,8 @@ import { Calendar, Clock, AlertCircle, CheckCircle, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, isAfter, isBefore } from 'date-fns';
 
-const MAX_ORDERS_PER_SLOT = 5; // Configurable capacity per time slot
-const MIN_LEAD_TIME_HOURS = 24; // Minimum hours before pickup
+const MAX_ORDERS_PER_SLOT = 5;
+const MIN_LEAD_TIME_HOURS = 24; // earliest pickup: 24 hrs from now
 
 const TIME_SLOTS = [
   { value: '09:00', label: '9:00 AM' },
@@ -75,33 +75,35 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   };
 
-  // Check if date is available (Mon–Sat, meets lead time)
+  // Check if date is available (Mon–Sat, at least one slot is 24+ hrs away)
   const isDateAvailable = (date) => {
     const dayOfWeek = date.getDay();
     const isMonToSat = dayOfWeek >= 1 && dayOfWeek <= 6;
+    if (!isMonToSat) return false;
 
-    const minDateTime = new Date();
-    minDateTime.setHours(minDateTime.getHours() + MIN_LEAD_TIME_HOURS);
+    const minDateTime = new Date(Date.now() + MIN_LEAD_TIME_HOURS * 60 * 60 * 1000);
 
-    return isMonToSat && isAfter(date, minDateTime);
+    // Day is available if its last slot (5pm) is still after the minimum
+    const dayLast = new Date(date);
+    dayLast.setHours(17, 0, 0, 0);
+
+    return dayLast > minDateTime;
   };
 
-  // Check if time slot is available
+  // Check if time slot is available (24+ hrs away and not fully booked)
   const isTimeSlotAvailable = (date, timeValue) => {
     if (!date) return false;
-    
+
     const dateStr = format(date, 'yyyy-MM-dd');
     const key = `${dateStr}_${timeValue}`;
     const currentBookings = bookingCounts[key] || 0;
-    
-    // Check minimum lead time for specific time slot
-    const [hours, minutes] = timeValue.split(':');
+
+    const [hours, minutes] = timeValue.split(':').map(Number);
     const slotDateTime = new Date(date);
-    slotDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    
-    const minDateTime = new Date();
-    minDateTime.setHours(minDateTime.getHours() + MIN_LEAD_TIME_HOURS);
-    
+    slotDateTime.setHours(hours, minutes, 0, 0);
+
+    const minDateTime = new Date(Date.now() + MIN_LEAD_TIME_HOURS * 60 * 60 * 1000);
+
     return currentBookings < MAX_ORDERS_PER_SLOT && isAfter(slotDateTime, minDateTime);
   };
 
@@ -257,7 +259,7 @@ export default function PickupScheduler({ selectedDate, selectedTime, onDateSele
             </div>
 
             <div className="mt-4 text-xs text-gray-500 text-center">
-              Orders must be placed at least {MIN_LEAD_TIME_HOURS} hours before pickup time
+              Orders must be placed at least {MIN_LEAD_TIME_HOURS} hours in advance
             </div>
           </CardContent>
         </Card>
