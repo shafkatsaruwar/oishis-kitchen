@@ -1,5 +1,6 @@
 import About from './pages/About';
 import AdminOrders from './pages/AdminOrders';
+import AdminMenu from './pages/AdminMenu';
 import BookEvent from './pages/BookEvent';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -22,6 +23,7 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "About": About,
     "AdminOrders": AdminOrders,
+    "AdminMenu": AdminMenu,
     "BookEvent": BookEvent,
     "Cart": Cart,
     "Checkout": Checkout,
