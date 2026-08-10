@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Flame, Pencil, Lock } from 'lucide-react';
+import { Flame, Pencil, Lock, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
@@ -43,6 +43,13 @@ export default function AdminMenu() {
 
   const saveMutation = useMutation({
     mutationFn: async (updated) => {
+      const options = (updated.options ?? [])
+        .filter(o => o.name?.trim())
+        .map(o => ({ name: o.name.trim(), price: parseFloat(o.price) || 0 }));
+      const trayOptions = (updated.tray_options ?? [])
+        .filter(o => o.name?.trim())
+        .map(o => ({ name: o.name.trim(), label: o.label || 'Full Tray', price: parseFloat(o.price) || 0 }));
+
       const { error } = await supabase
         .from('menu_items')
         .update({
@@ -51,6 +58,8 @@ export default function AdminMenu() {
           price: parseFloat(updated.price),
           spice_level: updated.spice_level,
           is_available: updated.is_available,
+          options: options.length > 0 ? options : null,
+          tray_options: trayOptions.length > 0 ? trayOptions : null,
         })
         .eq('id', updated.id);
       if (error) throw error;
@@ -90,6 +99,34 @@ export default function AdminMenu() {
   function handleSave() {
     if (!form.name?.trim()) return;
     saveMutation.mutate(form);
+  }
+
+  function addOption() {
+    setForm(f => ({ ...f, options: [...(f.options ?? []), { name: '', price: '' }] }));
+  }
+  function updateOption(i, key, val) {
+    setForm(f => {
+      const opts = [...(f.options ?? [])];
+      opts[i] = { ...opts[i], [key]: key === 'price' ? val : val };
+      return { ...f, options: opts };
+    });
+  }
+  function removeOption(i) {
+    setForm(f => ({ ...f, options: (f.options ?? []).filter((_, idx) => idx !== i) }));
+  }
+
+  function addTrayOption() {
+    setForm(f => ({ ...f, tray_options: [...(f.tray_options ?? []), { name: '', label: 'Full Tray', price: '' }] }));
+  }
+  function updateTrayOption(i, key, val) {
+    setForm(f => {
+      const opts = [...(f.tray_options ?? [])];
+      opts[i] = { ...opts[i], [key]: val };
+      return { ...f, tray_options: opts };
+    });
+  }
+  function removeTrayOption(i) {
+    setForm(f => ({ ...f, tray_options: (f.tray_options ?? []).filter((_, idx) => idx !== i) }));
   }
 
   if (!isAdmin) {
@@ -175,12 +212,12 @@ export default function AdminMenu() {
 
       {/* Edit Modal */}
       <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 overflow-y-auto pr-1">
             <div className="space-y-1.5">
               <Label>Name</Label>
               <Input
@@ -231,6 +268,86 @@ export default function AdminMenu() {
                       </span>
                     )}
                   </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Options / Variants */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label>Options / Variants</Label>
+                <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={addOption}>
+                  <Plus className="w-3 h-3" /> Add
+                </Button>
+              </div>
+              {(form.options ?? []).length === 0 && (
+                <p className="text-xs text-gray-400 italic">No options — item has a single fixed price</p>
+              )}
+              <div className="space-y-2">
+                {(form.options ?? []).map((opt, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <Input
+                      value={opt.name ?? ''}
+                      onChange={e => updateOption(i, 'name', e.target.value)}
+                      placeholder="Option name (e.g. Chicken)"
+                      className="flex-1 h-8 text-sm"
+                    />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={opt.price ?? ''}
+                      onChange={e => updateOption(i, 'price', e.target.value)}
+                      placeholder="Price"
+                      className="w-24 h-8 text-sm"
+                    />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-gray-400 hover:text-red-500" onClick={() => removeOption(i)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tray Options */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label>Tray Options</Label>
+                <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={addTrayOption}>
+                  <Plus className="w-3 h-3" /> Add
+                </Button>
+              </div>
+              {(form.tray_options ?? []).length === 0 && (
+                <p className="text-xs text-gray-400 italic">No tray options</p>
+              )}
+              <div className="space-y-2">
+                {(form.tray_options ?? []).map((opt, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <Input
+                      value={opt.name ?? ''}
+                      onChange={e => updateTrayOption(i, 'name', e.target.value)}
+                      placeholder="Name (e.g. Chicken Biryani)"
+                      className="flex-1 h-8 text-sm"
+                    />
+                    <Input
+                      value={opt.label ?? 'Full Tray'}
+                      onChange={e => updateTrayOption(i, 'label', e.target.value)}
+                      placeholder="Label"
+                      className="w-28 h-8 text-sm"
+                    />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={opt.price ?? ''}
+                      onChange={e => updateTrayOption(i, 'price', e.target.value)}
+                      placeholder="Price"
+                      className="w-24 h-8 text-sm"
+                    />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-gray-400 hover:text-red-500" onClick={() => removeTrayOption(i)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
