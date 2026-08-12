@@ -25,6 +25,12 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
   const basePrice = selectedOption?.price || item.price;
   const servingTotal = basePrice * quantity;
 
+  // Some trays are stored as options rather than trayOptions (e.g. Pulao's
+  // "Per Large Aluminum Tray"). Those are sold as whole trays, so the
+  // per-serving minimum must not apply to them.
+  const optionIsTray = /tray/i.test(selectedOption?.name || '');
+  const effectiveMinQty = optionIsTray ? 1 : (item.minQty || 1);
+
   // Tray price
   const trayTotal = (selectedTray?.price || 0) * trayQty;
 
@@ -43,6 +49,8 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
         ...item,
         price: basePrice,
         quantity,
+        // Carried into the cart so updateQuantity clamps to the right floor
+        minQty: effectiveMinQty,
         name: item.name + (selectedOption?.name ? ` - ${selectedOption.name}` : ''),
         customizations: { spiciness, option: selectedOption?.name || selectedOption }
       });
@@ -154,9 +162,9 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
               <div className="text-center">
                 <p className="text-cyan-600 text-3xl font-bold">${servingTotal.toFixed(2)}</p>
                 <p className="text-gray-500 text-sm mt-1">${basePrice.toFixed(2)} per meal</p>
-                {item.minQty > 1 &&
+                {effectiveMinQty > 1 &&
                   <Badge variant="outline" className="mt-2 bg-amber-50 text-amber-700 border-amber-400 font-medium">
-                    Min. order: {item.minQty}
+                    Min. order: {effectiveMinQty}
                   </Badge>
                 }
               </div>
@@ -172,7 +180,12 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
                       return (
                         <button
                           key={optionValue}
-                          onClick={() => setSelectedOption(option)}
+                          onClick={() => {
+                            setSelectedOption(option);
+                            // Trays are whole units; servings carry the minimum
+                            const nextIsTray = /tray/i.test(option?.name || option || '');
+                            setQuantity(nextIsTray ? 1 : (item.minQty || 1));
+                          }}
                           className={cn(
                             "p-3 rounded-lg border-2 transition-all text-sm font-medium",
                             (selectedOption?.name || selectedOption) === optionValue
@@ -220,8 +233,8 @@ export default function ItemCustomizationModal({ item, isOpen, onClose, onAddToC
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={() => setQuantity(Math.max(item.minQty || 1, quantity - 1))}
-                    disabled={quantity <= (item.minQty || 1)}
+                    onClick={() => setQuantity(Math.max(effectiveMinQty, quantity - 1))}
+                    disabled={quantity <= effectiveMinQty}
                     className="h-12 w-12 border-gray-300 hover:bg-gray-100">
                     <Minus className="w-5 h-5" />
                   </Button>

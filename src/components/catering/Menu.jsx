@@ -196,7 +196,7 @@ export default function Menu() {
         >
           <Leaf className="w-8 h-8 text-green-600 mx-auto mb-4" />
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-4">
-            <span className="font-semibold">🌟 Minimum order of 4 servings for most items.</span> We can adjust spice levels, prepare vegetarian options, and accommodate dietary restrictions!
+            <span className="font-semibold">🌟 Minimum order of 8 servings for most items.</span> We can adjust spice levels, prepare vegetarian options, and accommodate dietary restrictions!
           </p>
           <p className="text-base text-gray-600 italic">
             Most items ready in 2 hours. Call ahead for large orders and event catering.

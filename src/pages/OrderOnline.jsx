@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import ItemCustomizationModal from '../components/ordering/ItemCustomizationModal';
 
-const DEFAULT_MIN_QTY = 1;
+const DEFAULT_MIN_QTY = 8;
 
 // Menu is now managed from the iOS admin app and stored in Supabase.
 // The old hardcoded array has been replaced by a live fetch below.
