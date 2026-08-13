@@ -13,6 +13,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import MobileMenu from './components/layout/MobileMenu';
+import AdminShell from './components/admin/AdminShell';
+
+const ADMIN_PAGES = [
+  'AdminOrders',
+  'AdminMenu',
+  'AdminGrocery',
+  'AdminCalendar',
+  'AdminReviews',
+];
 
 function LayoutContent({ children, currentPageName }) {
   const { getCartCount } = useCart();
@@ -36,10 +45,18 @@ function LayoutContent({ children, currentPageName }) {
 
   const transparent = !scrolled;
 
+  // Admin pages render inside their own shell — no customer nav, order bar or
+  // contact buttons, so the console does not feel wedged into the storefront.
+  const isAdminPage = ADMIN_PAGES.includes(currentPageName);
+
   const handleLogout = async () => {
     await logout();
     navigate(createPageUrl('Home'));
   };
+
+  if (isAdminPage) {
+    return <AdminShell currentPageName={currentPageName}>{children}</AdminShell>;
+  }
 
   return (
     <div className="min-h-screen bg-ink-50">

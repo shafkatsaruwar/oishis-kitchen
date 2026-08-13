@@ -56,19 +56,19 @@ export default function OrderAnalytics({ orders }) {
         <Card className="bg-white border-gray-200 shadow-md">
           <CardContent className="p-4">
             <p className="text-sm text-gray-600">Total Orders</p>
-            <p className="text-2xl font-bold text-cyan-600">{totalOrders}</p>
+            <p className="text-2xl font-bold text-amber-600">{totalOrders}</p>
           </CardContent>
         </Card>
         <Card className="bg-white border-gray-200 shadow-md">
           <CardContent className="p-4">
             <p className="text-sm text-gray-600">Total Revenue</p>
-            <p className="text-2xl font-bold text-cyan-600">${totalRevenue.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-amber-600">${totalRevenue.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card className="bg-white border-gray-200 shadow-md">
           <CardContent className="p-4">
             <p className="text-sm text-gray-600">Last 7 Days</p>
-            <p className="text-2xl font-bold text-cyan-600">{last7}</p>
+            <p className="text-2xl font-bold text-amber-600">{last7}</p>
           </CardContent>
         </Card>
         <Card className="bg-white border-gray-200 shadow-md">
@@ -86,7 +86,7 @@ export default function OrderAnalytics({ orders }) {
       <Card className="bg-white border-gray-200 shadow-md">
         <CardHeader>
           <CardTitle className="text-gray-900 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-cyan-600" />
+            <TrendingUp className="w-5 h-5 text-amber-600" />
             Orders by Day (Last 14 Days)
           </CardTitle>
         </CardHeader>
@@ -105,7 +105,7 @@ export default function OrderAnalytics({ orders }) {
                 ]}
               />
               <Legend />
-              <Line type="monotone" dataKey="orders" stroke="#0891b2" strokeWidth={2} dot={{ r: 4 }} name="Orders" />
+              <Line type="monotone" dataKey="orders" stroke="#d97706" strokeWidth={2} dot={{ r: 4 }} name="Orders" />
               <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} name="Revenue" />
             </LineChart>
           </ResponsiveContainer>
@@ -116,7 +116,7 @@ export default function OrderAnalytics({ orders }) {
       <Card className="bg-white border-gray-200 shadow-md">
         <CardHeader>
           <CardTitle className="text-gray-900 flex items-center gap-2">
-            <Utensils className="w-5 h-5 text-cyan-600" />
+            <Utensils className="w-5 h-5 text-amber-600" />
             Most Popular Menu Items
           </CardTitle>
         </CardHeader>
@@ -145,7 +145,7 @@ export default function OrderAnalytics({ orders }) {
                   ]}
                 />
                 <Legend />
-                <Bar dataKey="quantity" fill="#0891b2" radius={[0, 4, 4, 0]} name="Quantity" />
+                <Bar dataKey="quantity" fill="#d97706" radius={[0, 4, 4, 0]} name="Quantity" />
               </BarChart>
             </ResponsiveContainer>
           )}

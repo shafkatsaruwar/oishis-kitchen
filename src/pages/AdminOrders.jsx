@@ -136,16 +136,14 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            Order <span className="text-cyan-600">Management</span>
-          </h1>
-          <p className="text-xl text-gray-700 mb-6">Manage and fulfill customer orders</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Orders</h1>
+          <p className="text-gray-600 mb-5">Manage and fulfill customer orders</p>
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <Button
               onClick={() => setShowPhoneOrder(true)}
@@ -170,7 +168,7 @@ export default function AdminOrders() {
           {statusOptions.map((status) => (
             <Card key={status.value} className="bg-white border-gray-200 shadow-md">
               <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-cyan-600">{statusCounts[status.value] || 0}</div>
+                <div className="text-3xl font-bold text-amber-600">{statusCounts[status.value] || 0}</div>
                 <div className="text-sm text-gray-700 mt-1">{status.label}</div>
               </CardContent>
             </Card>
@@ -254,7 +252,7 @@ export default function AdminOrders() {
                           variant={order.status === status.value ? 'default' : 'outline'}
                           onClick={() => updateStatusMutation.mutate({ orderId: order.id, newStatus: status.value })}
                           className={order.status === status.value
-                            ? 'bg-cyan-600 hover:bg-cyan-700'
+                            ? 'bg-amber-500 hover:bg-amber-600'
                             : 'border-gray-300 text-gray-700 hover:bg-gray-100'}
                         >
                           {status.label}
@@ -329,21 +327,21 @@ export default function AdminOrders() {
                 <CardContent>
                   <div className="grid md:grid-cols-3 gap-6 mb-4">
                     <div>
-                      <p className="text-sm text-cyan-600 mb-2 font-medium">Customer</p>
+                      <p className="text-sm text-amber-600 mb-2 font-medium">Customer</p>
                       <p className="font-semibold text-gray-900 text-lg">{order.customer_name}</p>
                       <div className="flex items-center gap-2 text-sm text-gray-700 mt-2">
-                        <Mail className="w-4 h-4 text-cyan-600" />
+                        <Mail className="w-4 h-4 text-amber-600" />
                         {order.customer_email}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-700 mt-1">
-                        <Phone className="w-4 h-4 text-cyan-600" />
+                        <Phone className="w-4 h-4 text-amber-600" />
                         {order.customer_phone}
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-cyan-600 mb-2 font-medium">Pickup Details</p>
+                      <p className="text-sm text-amber-600 mb-2 font-medium">Pickup Details</p>
                       <div className="flex items-center gap-2 text-gray-900">
-                        <Calendar className="w-4 h-4 text-cyan-600" />
+                        <Calendar className="w-4 h-4 text-amber-600" />
                         <span className="font-semibold">
                           {(() => {
                             const d = new Date(order.pickup_date);
@@ -359,8 +357,8 @@ export default function AdminOrders() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-cyan-600 mb-2 font-medium">Payment</p>
-                      <p className="text-3xl font-bold text-cyan-600">${order.total.toFixed(2)}</p>
+                      <p className="text-sm text-amber-600 mb-2 font-medium">Payment</p>
+                      <p className="text-3xl font-bold text-amber-600">${order.total.toFixed(2)}</p>
                       <p className="text-sm text-gray-700 mt-1 font-medium">
                         {order.payment_status === 'paid' ? '✓ Paid' : 'Pay on Pickup'}
                       </p>
@@ -369,8 +367,8 @@ export default function AdminOrders() {
 
                   <div className="border-t border-gray-200 pt-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <Package className="w-5 h-5 text-cyan-600" />
-                      <h4 className="font-semibold text-cyan-600">Order Items</h4>
+                      <Package className="w-5 h-5 text-amber-600" />
+                      <h4 className="font-semibold text-amber-600">Order Items</h4>
                     </div>
                     <div className="space-y-2">
                       {order.items.map((item, idx) => (
@@ -388,8 +386,8 @@ export default function AdminOrders() {
                       ))}
                     </div>
                     {order.special_requests && (
-                      <div className="mt-4 p-3 bg-cyan-50 rounded-lg border border-cyan-200">
-                        <p className="text-sm text-cyan-600 mb-1 font-medium">Special Requests:</p>
+                      <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <p className="text-sm text-amber-600 mb-1 font-medium">Special Requests:</p>
                         <p className="text-sm text-gray-900">{order.special_requests}</p>
                       </div>
                     )}
