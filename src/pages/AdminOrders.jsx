@@ -5,7 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
-import { Calendar, Phone, Mail, Package, Search, Filter } from 'lucide-react';
+import { Calendar, Phone, Mail, Package, Search, Filter, Printer, DollarSign, Undo2, FileText, PhoneCall, Star, FlaskConical } from 'lucide-react';
+import LabelPrintDialog from '../components/admin/LabelPrintDialog';
+import PaymentDialog from '../components/admin/PaymentDialog';
+import InvoiceDialog from '../components/admin/InvoiceDialog';
+import PhoneOrderDialog from '../components/admin/PhoneOrderDialog';
+import { recordPayment, reversePayment, setOrderFlags } from '@/lib/orderMutations';
 import { format } from 'date-fns';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
 import OrderAnalytics from '../components/admin/OrderAnalytics';
@@ -22,6 +27,11 @@ import { useAuth } from '@/lib/AuthContext';
 export default function AdminOrders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [labelOrder, setLabelOrder] = useState(null);
+  const [payOrder, setPayOrder] = useState(null);
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
+  const [showPhoneOrder, setShowPhoneOrder] = useState(false);
+  const [hideTestOrders, setHideTestOrders] = useState(true);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -64,6 +74,33 @@ export default function AdminOrders() {
     }
   });
 
+  const invalidateOrders = () => queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+
+  const paymentMutation = useMutation({
+    mutationFn: ({ orderId, method }) => recordPayment(orderId, method),
+    onSuccess: () => {
+      invalidateOrders();
+      setPayOrder(null);
+      toast.success('Payment recorded');
+    },
+    onError: (e) => toast.error(e.message || 'Payment not recorded'),
+  });
+
+  const reverseMutation = useMutation({
+    mutationFn: (orderId) => reversePayment(orderId),
+    onSuccess: () => {
+      invalidateOrders();
+      toast.success('Payment reversed');
+    },
+    onError: (e) => toast.error(e.message || 'Could not reverse payment'),
+  });
+
+  const flagsMutation = useMutation({
+    mutationFn: ({ orderId, isTest, isVip }) => setOrderFlags(orderId, { isTest, isVip }),
+    onSuccess: invalidateOrders,
+    onError: (e) => toast.error(e.message || 'Could not update tags'),
+  });
+
   const filteredOrders = orders?.filter(order => {
     const matchesSearch =
       order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -71,8 +108,9 @@ export default function AdminOrders() {
       order.customer_email?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const matchesTestFilter = !hideTestOrders || order.is_test !== true;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesTestFilter;
   }) || [];
 
   const getStatusCounts = () => {
@@ -107,7 +145,24 @@ export default function AdminOrders() {
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Order <span className="text-cyan-600">Management</span>
           </h1>
-          <p className="text-xl text-gray-700 mb-8">Manage and fulfill customer orders</p>
+          <p className="text-xl text-gray-700 mb-6">Manage and fulfill customer orders</p>
+          <div className="flex flex-wrap items-center gap-3 mb-8">
+            <Button
+              onClick={() => setShowPhoneOrder(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              <PhoneCall className="w-4 h-4 mr-2" />
+              New Phone Order
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setHideTestOrders((v) => !v)}
+              className={hideTestOrders ? 'border-gray-300 text-gray-600' : 'border-orange-400 text-orange-600'}
+            >
+              <FlaskConical className="w-4 h-4 mr-2" />
+              {hideTestOrders ? 'Test orders hidden' : 'Showing test orders'}
+            </Button>
+          </div>
         </motion.div>
 
         {/* Status Overview */}
@@ -181,6 +236,15 @@ export default function AdminOrders() {
                     <div className="flex items-center gap-4">
                       <CardTitle className="text-gray-900">Order #{order.order_number}</CardTitle>
                       <OrderStatusBadge status={order.status} />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setLabelOrder(order)}
+                        className="border-amber-400 text-amber-700 hover:bg-amber-50"
+                      >
+                        <Printer className="w-4 h-4 mr-1" />
+                        Labels
+                      </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {statusOptions.map((status) => (
@@ -197,6 +261,69 @@ export default function AdminOrders() {
                         </Button>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100 mt-3">
+                    {order.payment_status === 'paid' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => reverseMutation.mutate(order.id)}
+                        disabled={reverseMutation.isPending}
+                        className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                      >
+                        <Undo2 className="w-4 h-4 mr-1" />
+                        Undo payment
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => setPayOrder(order)}
+                        className="bg-amber-500 hover:bg-amber-600 text-white"
+                      >
+                        <DollarSign className="w-4 h-4 mr-1" />
+                        Record payment
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setInvoiceOrder(order)}
+                      className="border-gray-300 text-gray-700"
+                    >
+                      <FileText className="w-4 h-4 mr-1" />
+                      {order.payment_status === 'paid' ? 'Receipt' : 'Invoice'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        flagsMutation.mutate({
+                          orderId: order.id,
+                          isTest: order.is_test === true,
+                          isVip: !(order.is_vip === true),
+                        })
+                      }
+                      className={order.is_vip ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-300 text-gray-600'}
+                    >
+                      <Star className="w-4 h-4 mr-1" />
+                      VIP
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        flagsMutation.mutate({
+                          orderId: order.id,
+                          isTest: !(order.is_test === true),
+                          isVip: order.is_vip === true,
+                        })
+                      }
+                      className={order.is_test ? 'border-gray-400 bg-gray-100 text-gray-700' : 'border-gray-300 text-gray-600'}
+                    >
+                      <FlaskConical className="w-4 h-4 mr-1" />
+                      Test
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -273,6 +400,35 @@ export default function AdminOrders() {
           </div>
         )}
       </div>
+
+      <LabelPrintDialog
+        key={labelOrder?.id}
+        order={labelOrder}
+        isOpen={!!labelOrder}
+        onClose={() => setLabelOrder(null)}
+      />
+
+      <PaymentDialog
+        key={payOrder?.id}
+        order={payOrder}
+        isOpen={!!payOrder}
+        onClose={() => setPayOrder(null)}
+        isSaving={paymentMutation.isPending}
+        onRecord={(method) => paymentMutation.mutate({ orderId: payOrder.id, method })}
+      />
+
+      <InvoiceDialog
+        key={invoiceOrder?.id}
+        order={invoiceOrder}
+        isOpen={!!invoiceOrder}
+        onClose={() => setInvoiceOrder(null)}
+      />
+
+      <PhoneOrderDialog
+        isOpen={showPhoneOrder}
+        onClose={() => setShowPhoneOrder(false)}
+        onCreated={invalidateOrders}
+      />
     </div>
   );
 }

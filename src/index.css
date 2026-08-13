@@ -161,3 +161,153 @@ button:focus-visible {
     font-family: 'Cormorant Garamond', Georgia, serif;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Order labels — 4"x2" on Avery 5163 / 8163 sheets.
+   Geometry matches drawLabel() in the OishiAdmin iOS app so a label printed
+   from the web is identical to one printed from the phone.
+   --------------------------------------------------------------------------- */
+
+.ok-label {
+  width: 4in;
+  height: 2in;
+  background: #fff;
+  border: 0.5pt solid #dedede;
+  border-radius: 9pt;
+  box-sizing: border-box;
+  padding: 5pt 9pt 9pt;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+
+.ok-label-bar {
+  height: 7pt;
+  background: #c9a84c;
+  border-radius: 3.5pt;
+  flex: none;
+}
+
+.ok-label-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10pt;
+  padding-top: 7pt;
+  min-height: 0;
+}
+
+.ok-label-logo {
+  width: 66pt;
+  height: 66pt;
+  flex: none;
+  border: 0.5pt solid #dedede;
+  border-radius: 6pt;
+  padding: 3pt;
+  box-sizing: border-box;
+}
+.ok-label-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ok-label-text { flex: 1; min-width: 0; }
+
+/* Size is set inline per label — long dish names step down so two lines fit */
+.ok-label-name {
+  font-weight: 700;
+  color: #000;
+  line-height: 1.05;
+  overflow-wrap: break-word;
+}
+
+.ok-label-note {
+  font-size: 10pt;
+  font-style: italic;
+  color: #8c8c8c;
+  margin-top: 3pt;
+}
+
+.ok-label-pickup {
+  flex: none;
+  text-align: right;
+  color: #8c8c8c;
+}
+.ok-label-pickup-cap { font-size: 9pt; }
+.ok-label-pickup-val { font-size: 11pt; font-variant-numeric: tabular-nums; }
+
+/* Preview inside the dialog — scaled to the dialog width */
+.ok-label-preview {
+  container-type: inline-size;
+  display: flex;
+  justify-content: center;
+}
+.ok-label-preview .ok-label {
+  transform-origin: top center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* The print surface is kept out of the way until printing. The sheet geometry
+   lives outside the print query so it is identical on screen and on paper. */
+.ok-print-root { display: none; }
+
+.ok-sheet {
+  position: relative;
+  width: 8.5in;
+  height: 11in;
+  background: #fff;
+}
+.ok-slot { position: absolute; }
+
+@media print {
+  /* Everything except the sheets disappears */
+  body > *:not(.ok-print-root) { display: none !important; }
+  [data-radix-popper-content-wrapper],
+  [role='dialog'] { display: none !important; }
+
+  .ok-print-root { display: block !important; }
+
+  @page { size: letter portrait; margin: 0; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .ok-sheet {
+    page-break-after: always;
+    break-after: page;
+  }
+  .ok-sheet:last-child { page-break-after: auto; break-after: auto; }
+
+  .ok-label { border-color: #dedede; }
+
+  /* Keep the gold bar and greys from being dropped by the print pipeline */
+  .ok-label-bar,
+  .ok-label,
+  .ok-label-note,
+  .ok-label-pickup {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Receipt/invoice rules — dashed like a till roll */
+.ok-invoice-dash {
+  border-top: 1px dashed #d4d4d4;
+}
+
+/* The invoice prints from its own root for the same reason the labels do:
+   everything inside a dialog is hidden during print. */
+@media print {
+  .ok-print-invoice {
+    display: block !important;
+    width: 4.5in;
+    margin: 0.5in auto;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  .ok-print-invoice .ok-invoice { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

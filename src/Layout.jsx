@@ -152,6 +152,20 @@ function LayoutContent({ children, currentPageName }) {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      {isAdmin && (
+                        <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
+                          <Link to={createPageUrl('AdminCalendar')} className="cursor-pointer">
+                            Pickup Calendar
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {isAdmin && (
+                        <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
+                          <Link to={createPageUrl('AdminGrocery')} className="cursor-pointer">
+                            Grocery List
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={handleLogout}
                         className="cursor-pointer text-red-500 hover:bg-red-50 font-dm rounded-none"
@@ -181,12 +195,12 @@ function LayoutContent({ children, currentPageName }) {
         </div>
       </nav>
 
-      <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px]' : ''}`}>
+      <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminCalendar', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px]' : ''}`}>
         {children}
       </div>
 
       {/* Sticky mobile order bar — hidden on cart/checkout pages */}
-      {!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'MyOrders', 'Login'].includes(currentPageName) && (
+      {!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminCalendar', 'MyOrders', 'Login'].includes(currentPageName) && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-ink-100 px-4 py-3 flex gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <Link to={createPageUrl('OrderOnline')} className="flex-1">
             <Button className="w-full bg-ink-900 hover:bg-ink-700 text-white font-dm font-medium text-sm rounded-none h-11 tracking-wide">
