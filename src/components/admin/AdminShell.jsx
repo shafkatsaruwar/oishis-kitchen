@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 const SECTIONS = [
   { page: 'AdminOrders', label: 'Orders', icon: ClipboardList, badge: 'pendingOrders' },
   { page: 'AdminCalendar', label: 'Calendar', icon: CalendarDays },
-  { page: 'AdminMenu', label: 'Menu', icon: UtensilsCrossed },
+  { page: 'AdminMenu', label: 'Menu', icon: UtensilsCrossed, badge: 'lowStock' },
   { page: 'AdminGrocery', label: 'Grocery', icon: ShoppingCart },
   { page: 'AdminReviews', label: 'Reviews', icon: MessageSquare, badge: 'pendingReviews' },
 ];
@@ -36,11 +36,20 @@ export default function AdminShell({ currentPageName, children }) {
   const { data: badges = {} } = useQuery({
     queryKey: ['admin-badges'],
     queryFn: async () => {
-      const [orders, reviews] = await Promise.all([
+      const [orders, reviews, stock] = await Promise.all([
         supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        // Dishes running low or out. stock_qty is null when a dish isn't tracked.
+        supabase.from('menu_items').select('stock_qty, low_stock_threshold').not('stock_qty', 'is', null),
       ]);
-      return { pendingOrders: orders.count || 0, pendingReviews: reviews.count || 0 };
+      const lowStock = (stock.data || []).filter(
+        (i) => i.stock_qty <= (i.low_stock_threshold ?? 5)
+      ).length;
+      return {
+        pendingOrders: orders.count || 0,
+        pendingReviews: reviews.count || 0,
+        lowStock,
+      };
     },
     enabled: isAdmin,
     refetchInterval: 60_000,

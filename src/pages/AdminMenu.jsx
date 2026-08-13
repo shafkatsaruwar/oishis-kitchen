@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import StockControl from '../components/admin/StockControl';
 import { Flame, Pencil, Lock, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
@@ -70,6 +71,26 @@ export default function AdminMenu() {
       setEditingItem(null);
     },
     onError: () => toast.error('Failed to save item'),
+  });
+
+  const setStock = useMutation({
+    mutationFn: async ({ id, stock_qty }) => {
+      // A dish that runs out comes off the customer menu automatically; putting
+      // stock back makes it orderable again.
+      const patch = { stock_qty };
+      if (stock_qty === 0) patch.is_available = false;
+      if (typeof stock_qty === 'number' && stock_qty > 0) patch.is_available = true;
+
+      const { data, error } = await supabase
+        .from('menu_items')
+        .update(patch)
+        .eq('id', id)
+        .select();
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Nothing was updated — please try again.');
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-menu-items'] }),
+    onError: (e) => toast.error(e.message || 'Could not update stock'),
   });
 
   const toggleAvailability = useMutation({
@@ -185,6 +206,12 @@ export default function AdminMenu() {
                       <span className="text-amber-600 font-bold text-sm shrink-0">
                         ${parseFloat(item.price).toFixed(2)}
                       </span>
+
+                      <StockControl
+                        item={item}
+                        disabled={setStock.isPending}
+                        onChange={(stock_qty) => setStock.mutate({ id: item.id, stock_qty })}
+                      />
 
                       <Switch
                         checked={item.is_available}
