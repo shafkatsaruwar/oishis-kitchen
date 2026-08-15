@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Printer, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -210,27 +211,32 @@ export default function LabelSheet({ labels }) {
         </Button>
       </div>
 
-      {/* Print surface — off-screen until the browser print dialog runs */}
-      <div className="ok-print-root" aria-hidden="true">
-        {sheets.map((page, pageIdx) => (
-          <div className="ok-sheet" key={pageIdx}>
-            {page.map((label, slot) =>
-              label ? (
-                <div
-                  key={slot}
-                  className="ok-slot"
-                  style={{
-                    left: `${LEFT_MARGIN + (slot % COLS) * (LABEL_W + COL_GAP)}in`,
-                    top: `${TOP_MARGIN + Math.floor(slot / COLS) * LABEL_H}in`,
-                  }}
-                >
-                  <Label {...label} />
-                </div>
-              ) : null
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Print surface. Portalled to <body> because the print rules hide every
+          direct child of body except this one — nested inside the React tree it
+          would be hidden along with #root, printing a blank page. */}
+      {createPortal(
+        <div className="ok-print-root" aria-hidden="true">
+          {sheets.map((page, pageIdx) => (
+            <div className="ok-sheet" key={pageIdx}>
+              {page.map((label, slot) =>
+                label ? (
+                  <div
+                    key={slot}
+                    className="ok-slot"
+                    style={{
+                      left: `${LEFT_MARGIN + (slot % COLS) * (LABEL_W + COL_GAP)}in`,
+                      top: `${TOP_MARGIN + Math.floor(slot / COLS) * LABEL_H}in`,
+                    }}
+                  >
+                    <Label {...label} />
+                  </div>
+                ) : null
+              )}
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
     </>
   );
 }

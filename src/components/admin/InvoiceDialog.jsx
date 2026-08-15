@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
@@ -170,11 +171,13 @@ export default function InvoiceDialog({ order, isOpen, onClose, onToggleTax, isT
         </DialogContent>
       </Dialog>
 
-      {isOpen && (
-        <div className="ok-print-root ok-print-invoice" aria-hidden="true">
-          <InvoiceCard order={order} />
-        </div>
-      )}
+      {isOpen &&
+        createPortal(
+          <div className="ok-print-root ok-print-invoice" aria-hidden="true">
+            <InvoiceCard order={order} />
+          </div>,
+          document.body
+        )}
     </>
   );
 }
