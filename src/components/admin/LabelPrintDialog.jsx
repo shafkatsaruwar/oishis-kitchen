@@ -1,81 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Minus, Plus, Printer, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Minus, Plus } from 'lucide-react';
+import LabelSheet from './LabelSheet';
 
-// Avery 5163 / 8163 geometry, in inches — identical to the iOS PDF generator.
-const LABEL_W = 4;
-const LABEL_H = 2;
-const LEFT_MARGIN = 0.15;
-const TOP_MARGIN = 0.5;
-const COL_GAP = 0.2;
-const COLS = 2;
-const ROWS = 5;
-const PER_SHEET = COLS * ROWS;
-
-/**
- * One 4"x2" label. Mirrors drawLabel() in the iOS app: gold capsule across the
- * top, logo boxed on the left, dish name and note in the middle, pickup details
- * borderless on the right.
- */
-// Same steps the iOS shrink loop lands on, so both renderers agree
-function nameSize(name = '') {
-  if (name.length > 30) return 14;
-  if (name.length > 22) return 16;
-  if (name.length > 15) return 20;
-  return 28;
-}
-
-function Label({ name, note, date, time }) {
-  return (
-    <div className="ok-label">
-      <div className="ok-label-bar" />
-      <div className="ok-label-body">
-        <div className="ok-label-logo">
-          <img src="/logo.png" alt="" />
-        </div>
-        <div className="ok-label-text">
-          <div className="ok-label-name" style={{ fontSize: `${nameSize(name)}pt` }}>
-            {name}
-          </div>
-          {note && <div className="ok-label-note">{note}</div>}
-        </div>
-        {(date || time) && (
-          <div className="ok-label-pickup">
-            <div className="ok-label-pickup-cap">Pickup</div>
-            {date && <div className="ok-label-pickup-val">{date}</div>}
-            {time && <div className="ok-label-pickup-val">{time}</div>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
+/** Labels for one order, with the count per dish defaulting to the order quantity. */
 export default function LabelPrintDialog({ order, isOpen, onClose }) {
   const items = order?.items || [];
 
   const [counts, setCounts] = useState(() =>
     Object.fromEntries(items.map((i) => [i.name, i.quantity || 1]))
   );
-  const [usedSlots, setUsedSlots] = useState([]);
 
-  const totalLabels = useMemo(
-    () => items.reduce((sum, i) => sum + (counts[i.name] ?? i.quantity ?? 1), 0),
-    [items, counts]
-  );
-
-  const freeOnFirstSheet = PER_SHEET - usedSlots.length;
-  const sheetIsFull = usedSlots.length >= PER_SHEET;
-
-  const sheetsNeeded = useMemo(() => {
-    if (totalLabels === 0) return 0;
-    if (totalLabels <= freeOnFirstSheet) return 1;
-    return 1 + Math.ceil((totalLabels - freeOnFirstSheet) / PER_SHEET);
-  }, [totalLabels, freeOnFirstSheet]);
-
-  // Flatten every dish into one label per copy, in menu order
   const labels = useMemo(() => {
     const out = [];
     for (const item of items) {
@@ -92,228 +27,64 @@ export default function LabelPrintDialog({ order, isOpen, onClose }) {
     return out;
   }, [items, counts, order]);
 
-  // Lay the labels onto sheets, leaving the already-peeled slots empty
-  const sheets = useMemo(() => {
-    const pages = [];
-    let idx = 0;
-    let firstPage = true;
-    while (idx < labels.length) {
-      const page = new Array(PER_SHEET).fill(null);
-      for (let slot = 0; slot < PER_SHEET; slot++) {
-        if (idx >= labels.length) break;
-        if (firstPage && usedSlots.includes(slot)) continue;
-        page[slot] = labels[idx];
-        idx += 1;
-      }
-      pages.push(page);
-      firstPage = false;
-    }
-    return pages;
-  }, [labels, usedSlots]);
-
-  // slot -> label number, for the sheet map
-  const firstSheetAssignment = useMemo(() => {
-    const map = {};
-    let placed = 0;
-    for (let slot = 0; slot < PER_SHEET; slot++) {
-      if (usedSlots.includes(slot)) continue;
-      if (placed >= totalLabels) break;
-      placed += 1;
-      map[slot] = placed;
-    }
-    return map;
-  }, [usedSlots, totalLabels]);
-
-  const firstFreeSlot = [...Array(PER_SHEET).keys()].find((s) => !usedSlots.includes(s));
-
-  const setCount = (name, value) =>
-    setCounts((prev) => ({ ...prev, [name]: Math.max(0, Math.min(50, value)) }));
-
-  const toggleSlot = (slot) =>
-    setUsedSlots((prev) => (prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]));
-
-  const handlePrint = () => {
-    const detail =
-      usedSlots.length > 0
-        ? ` Skipping ${usedSlots.length} used, starting at position ${firstFreeSlot + 1}.`
-        : '';
-    const ok = window.confirm(
-      `Label paper loaded?\n\nThis prints ${totalLabels} label${totalLabels === 1 ? '' : 's'} on ` +
-        `${sheetsNeeded} sheet${sheetsNeeded === 1 ? '' : 's'}.${detail}\n\n` +
-        'Load your 4"x2" label sheets (Avery 5163 / 8163) before continuing — plain paper will waste the job.'
-    );
-    if (ok) window.print();
-  };
+  // Functional update so rapid clicks don't all read the same stale count
+  const adjustCount = (name, delta, fallback) =>
+    setCounts((prev) => ({
+      ...prev,
+      [name]: Math.max(0, Math.min(50, (prev[name] ?? fallback) + delta)),
+    }));
 
   if (!order) return null;
 
-  const preview = labels[0] || {
-    name: 'Dish Name',
-    note: null,
-    date: order.pickup_date,
-    time: order.pickup_time,
-  };
-
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto print:hidden">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900">
-              Print Labels — #{order.order_number}
-            </DialogTitle>
-            <p className="text-sm text-gray-600">
-              Defaults to order quantity. Prints on 4"×2" label sheets (Avery 5163 / 8163), 10 per page.
-            </p>
-          </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="print:hidden">
+          <DialogTitle className="text-2xl font-bold text-gray-900">
+            Print Labels — #{order.order_number}
+          </DialogTitle>
+          <p className="text-sm text-gray-600">
+            Defaults to order quantity. Prints on 4"×2" label sheets (Avery 5163 / 8163), 10 per page.
+          </p>
+        </DialogHeader>
 
-          {/* Per-dish counts */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 tracking-wide mb-2">DISHES</h4>
-            <div className="rounded-lg border border-gray-200 divide-y divide-gray-200">
-              {items.map((item) => {
-                const value = counts[item.name] ?? item.quantity ?? 1;
-                return (
-                  <div key={item.name} className="flex items-center gap-3 p-3">
-                    <div className="flex-1">
-                      <div className="text-gray-900">{item.name}</div>
-                      {item.special_instructions && (
-                        <div className="text-xs text-gray-500 italic">{item.special_instructions}</div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setCount(item.name, value - 1)}
-                      className="text-amber-600 disabled:text-gray-300"
-                      disabled={value <= 0}
-                      aria-label={`One fewer ${item.name} label`}
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    <span className="w-8 text-center font-bold tabular-nums">{value}</span>
-                    <button
-                      onClick={() => setCount(item.name, value + 1)}
-                      className="text-amber-600"
-                      aria-label={`One more ${item.name} label`}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Sheet map */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 tracking-wide mb-2">
-              SHEET IN THE PRINTER
-            </h4>
-            <p className="text-xs text-gray-600 mb-3">
-              Click any labels you've already used. Printing starts at the first free one.
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {[...Array(PER_SHEET).keys()].map((slot) => {
-                const isUsed = usedSlots.includes(slot);
-                const number = firstSheetAssignment[slot];
-                return (
-                  <button
-                    key={slot}
-                    onClick={() => toggleSlot(slot)}
-                    className={cn(
-                      'h-11 rounded-md border flex items-center justify-center text-sm font-bold transition-colors',
-                      isUsed
-                        ? 'border-dashed border-gray-300 bg-gray-100 text-gray-400'
-                        : number
-                          ? 'border-amber-400 bg-amber-50 text-amber-700'
-                          : 'border-gray-200 bg-white text-gray-300'
+        <div className="print:hidden">
+          <h4 className="text-xs font-semibold text-gray-500 tracking-wide mb-2">DISHES</h4>
+          <div className="rounded-lg border border-gray-200 divide-y divide-gray-200">
+            {items.map((item) => {
+              const value = counts[item.name] ?? item.quantity ?? 1;
+              return (
+                <div key={item.name} className="flex items-center gap-3 p-3">
+                  <div className="flex-1">
+                    <div className="text-gray-900">{item.name}</div>
+                    {item.special_instructions && (
+                      <div className="text-xs text-gray-500 italic">{item.special_instructions}</div>
                     )}
-                    aria-label={`Sheet position ${slot + 1}${isUsed ? ', already used' : ''}`}
-                  >
-                    {isUsed ? <X className="w-4 h-4" /> : number || ''}
-                  </button>
-                );
-              })}
-            </div>
-            {sheetIsFull && (
-              <p className="text-xs text-orange-600 mt-2">
-                This sheet is full — load a fresh one and clear the map.
-              </p>
-            )}
-            {usedSlots.length > 0 && (
-              <button
-                onClick={() => setUsedSlots([])}
-                className="text-xs text-amber-600 mt-2 underline"
-              >
-                Clear — fresh sheet
-              </button>
-            )}
-          </div>
-
-          {/* Preview */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 tracking-wide mb-2">LABEL PREVIEW</h4>
-            <div className="ok-label-preview">
-              <Label {...preview} />
-            </div>
-            <p className="text-xs text-gray-500 text-center mt-2">
-              Actual label: 4" × 2" — fits standard Avery 5163/8163 sheets
-            </p>
-          </div>
-
-          {/* Summary + print */}
-          <div className="border-t border-gray-200 pt-4 space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-700">Total labels</span>
-              <span className="font-bold text-amber-600">{totalLabels}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-700">Sheets needed</span>
-              <span className="text-gray-600">
-                {sheetsNeeded === 0 ? '—' : `${sheetsNeeded} sheet${sheetsNeeded === 1 ? '' : 's'}`}
-              </span>
-            </div>
-            {usedSlots.length > 0 && !sheetIsFull && (
-              <div className="flex justify-between">
-                <span className="text-gray-700">Starts at position</span>
-                <span className="text-gray-600 tabular-nums">{firstFreeSlot + 1}</span>
-              </div>
-            )}
-          </div>
-
-          <Button
-            onClick={handlePrint}
-            disabled={totalLabels === 0 || sheetIsFull}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Print
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* Print surface — off-screen until the browser print dialog runs */}
-      {isOpen && (
-        <div className="ok-print-root" aria-hidden="true">
-          {sheets.map((page, pageIdx) => (
-            <div className="ok-sheet" key={pageIdx}>
-              {page.map((label, slot) =>
-                label ? (
-                  <div
-                    key={slot}
-                    className="ok-slot"
-                    style={{
-                      left: `${LEFT_MARGIN + (slot % COLS) * (LABEL_W + COL_GAP)}in`,
-                      top: `${TOP_MARGIN + Math.floor(slot / COLS) * LABEL_H}in`,
-                    }}
-                  >
-                    <Label {...label} />
                   </div>
-                ) : null
-              )}
-            </div>
-          ))}
+                  <button
+                    onClick={() => adjustCount(item.name, -1, item.quantity ?? 1)}
+                    className="text-amber-600 disabled:text-gray-300"
+                    disabled={value <= 0}
+                    aria-label={`One fewer ${item.name} label`}
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <span className="w-8 text-center font-bold tabular-nums">{value}</span>
+                  <button
+                    onClick={() => adjustCount(item.name, 1, item.quantity ?? 1)}
+                    className="text-amber-600"
+                    aria-label={`One more ${item.name} label`}
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      )}
-    </>
+
+        <LabelSheet labels={labels} />
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
 import {
+  Tag,
   ClipboardList,
   UtensilsCrossed,
   CalendarDays,
@@ -19,6 +20,7 @@ const SECTIONS = [
   { page: 'AdminCalendar', label: 'Calendar', icon: CalendarDays },
   { page: 'AdminMenu', label: 'Menu', icon: UtensilsCrossed, badge: 'lowStock' },
   { page: 'AdminGrocery', label: 'Grocery', icon: ShoppingCart },
+  { page: 'AdminLabels', label: 'Labels', icon: Tag },
   { page: 'AdminReviews', label: 'Reviews', icon: MessageSquare, badge: 'pendingReviews' },
 ];
 

@@ -21,6 +21,7 @@ const ADMIN_PAGES = [
   'AdminGrocery',
   'AdminCalendar',
   'AdminReviews',
+  'AdminLabels',
 ];
 
 function LayoutContent({ children, currentPageName }) {
