@@ -60,9 +60,12 @@ export async function createPhoneOrder({
   specialRequests,
   paidNow,
   paymentMethod,
+  noTax = false,
 }) {
   const subtotal = round2(items.reduce((sum, i) => sum + i.price * i.quantity, 0));
-  const tax = round2(subtotal * TAX_RATE);
+  // Tax-exempt orders still store a tax of 0 rather than null, so every total
+  // downstream stays subtotal + tax without special cases.
+  const tax = noTax ? 0 : round2(subtotal * TAX_RATE);
   const total = round2(subtotal + tax);
 
   const { data, error } = await supabase

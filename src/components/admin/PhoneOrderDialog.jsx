@@ -70,6 +70,7 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
   const [specialRequests, setSpecialRequests] = useState('');
   const [paidNow, setPaidNow] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [noTax, setNoTax] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const { data: menu = [] } = useQuery({
@@ -114,7 +115,7 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
   );
 
   const subtotal = round2(lines.reduce((s, l) => s + l.price * l.quantity, 0));
-  const tax = round2(subtotal * TAX_RATE);
+  const tax = noTax ? 0 : round2(subtotal * TAX_RATE);
   const total = round2(subtotal + tax);
   const itemCount = lines.reduce((s, l) => s + l.quantity, 0);
 
@@ -181,6 +182,7 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
         specialRequests,
         paidNow,
         paymentMethod,
+        noTax,
       });
       toast.success(`Order #${order.order_number} created`);
       onCreated?.();
@@ -203,6 +205,7 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
     setCustomerEmail('');
     setSpecialRequests('');
     setPaidNow(false);
+    setNoTax(false);
   };
 
   return (
@@ -454,6 +457,15 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
                 )}
               </div>
 
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={noTax}
+                  onChange={(e) => setNoTax(e.target.checked)}
+                />
+                No tax on this order
+              </label>
+
               <div className="border-t border-gray-200 pt-3 space-y-1 text-sm">
                 {lines.map((l, i) => (
                   <div key={i} className="flex justify-between">
@@ -468,7 +480,7 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
                   <span className="tabular-nums">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
-                  <span>Tax (6.25%)</span>
+                  <span>{noTax ? 'Tax (exempt)' : 'Tax (6.25%)'}</span>
                   <span className="tabular-nums">${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-gray-900">
