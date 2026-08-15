@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
-import { Calendar, Phone, Mail, Package, Search, Filter, Printer, DollarSign, Undo2, FileText, PhoneCall, Star, FlaskConical } from 'lucide-react';
+import { Calendar, Phone, Mail, Package, Search, Filter, Printer, DollarSign, Undo2, FileText, PhoneCall, Star, FlaskConical, Percent } from 'lucide-react';
 import LabelPrintDialog from '../components/admin/LabelPrintDialog';
 import PaymentDialog from '../components/admin/PaymentDialog';
 import InvoiceDialog from '../components/admin/InvoiceDialog';
 import PhoneOrderDialog from '../components/admin/PhoneOrderDialog';
-import { recordPayment, reversePayment, setOrderFlags } from '@/lib/orderMutations';
+import { recordPayment, reversePayment, setOrderFlags, setOrderTaxExempt } from '@/lib/orderMutations';
 import { format } from 'date-fns';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
 import OrderAnalytics from '../components/admin/OrderAnalytics';
@@ -93,6 +93,15 @@ export default function AdminOrders() {
       toast.success('Payment reversed');
     },
     onError: (e) => toast.error(e.message || 'Could not reverse payment'),
+  });
+
+  const taxMutation = useMutation({
+    mutationFn: ({ order, exempt }) => setOrderTaxExempt(order, exempt),
+    onSuccess: (_d, { exempt }) => {
+      invalidateOrders();
+      toast.success(exempt ? 'Tax removed' : 'Tax reapplied');
+    },
+    onError: (e) => toast.error(e.message || 'Could not change tax'),
   });
 
   const flagsMutation = useMutation({
@@ -286,6 +295,27 @@ export default function AdminOrders() {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() =>
+                        taxMutation.mutate({ order, exempt: (order.tax ?? 0) !== 0 })
+                      }
+                      disabled={taxMutation.isPending}
+                      className={
+                        (order.tax ?? 0) === 0
+                          ? 'border-green-300 bg-green-50 text-green-700'
+                          : 'border-gray-300 text-gray-700'
+                      }
+                      title={
+                        (order.tax ?? 0) === 0
+                          ? 'This order is tax-exempt — click to reapply tax'
+                          : 'Remove tax from this order'
+                      }
+                    >
+                      <Percent className="w-4 h-4 mr-1" />
+                      {(order.tax ?? 0) === 0 ? 'Tax exempt' : 'Remove tax'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() => setInvoiceOrder(order)}
                       className="border-gray-300 text-gray-700"
                     >
@@ -420,6 +450,14 @@ export default function AdminOrders() {
         order={invoiceOrder}
         isOpen={!!invoiceOrder}
         onClose={() => setInvoiceOrder(null)}
+        isTaxPending={taxMutation.isPending}
+        onToggleTax={(exempt) =>
+          taxMutation.mutate(
+            { order: invoiceOrder, exempt },
+            // Keep the open invoice in step with the row that was just written
+            { onSuccess: (updated) => setInvoiceOrder(updated) }
+          )
+        }
       />
 
       <PhoneOrderDialog

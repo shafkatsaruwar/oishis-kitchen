@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
-import { Printer, MessageCircle } from 'lucide-react';
+import { Printer, MessageCircle, Percent } from 'lucide-react';
 
 /**
  * The invoice/receipt card. Rendered twice — once inside the dialog for viewing,
@@ -109,7 +109,7 @@ function InvoiceCard({ order }) {
   );
 }
 
-export default function InvoiceDialog({ order, isOpen, onClose }) {
+export default function InvoiceDialog({ order, isOpen, onClose, onToggleTax, isTaxPending }) {
   if (!order) return null;
 
   const isInvoice = order.payment_status !== 'paid';
@@ -132,6 +132,22 @@ export default function InvoiceDialog({ order, isOpen, onClose }) {
             </DialogTitle>
           </VisuallyHidden.Root>
           <InvoiceCard order={order} />
+
+          {onToggleTax && (
+            <Button
+              variant="outline"
+              onClick={() => onToggleTax((order.tax ?? 0) !== 0)}
+              disabled={isTaxPending}
+              className={
+                (order.tax ?? 0) === 0
+                  ? 'w-full border-green-300 bg-green-50 text-green-700'
+                  : 'w-full border-gray-300 text-gray-700'
+              }
+            >
+              <Percent className="w-4 h-4 mr-2" />
+              {(order.tax ?? 0) === 0 ? 'Tax exempt — reapply tax' : 'Remove tax from this order'}
+            </Button>
+          )}
 
           <div className="flex gap-2 pt-2">
             <Button onClick={() => window.print()} variant="outline" className="flex-1 border-gray-300">

@@ -34,6 +34,28 @@ export const reversePayment = (orderId) =>
 export const setOrderFlags = (orderId, { isTest, isVip }) =>
   updateOrder(orderId, { is_test: isTest, is_vip: isVip });
 
+/**
+ * Removes or reinstates tax on an order that already exists — a website order
+ * from a customer who turns out to be tax-exempt, say.
+ *
+ * The subtotal is recomputed from the line items rather than trusted from the
+ * row, so an order saved before subtotal was stored still totals correctly.
+ */
+export function orderSubtotal(order) {
+  if (typeof order.subtotal === 'number') return round2(order.subtotal);
+  return round2((order.items || []).reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 0), 0));
+}
+
+export const setOrderTaxExempt = (order, exempt) => {
+  const subtotal = orderSubtotal(order);
+  const tax = exempt ? 0 : round2(subtotal * TAX_RATE);
+  return updateOrder(order.id, {
+    subtotal,
+    tax,
+    total: round2(subtotal + tax),
+  });
+};
+
 export async function deleteOrder(orderId) {
   const { error } = await supabase.from('orders').delete().eq('id', orderId);
   if (error) throw error;
