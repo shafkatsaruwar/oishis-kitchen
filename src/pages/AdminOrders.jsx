@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
-import { Calendar, Phone, Mail, Package, Search, Filter, Printer, DollarSign, Undo2, FileText, PhoneCall, Star, FlaskConical, Percent } from 'lucide-react';
+import { Calendar, Phone, Mail, Package, Search, Filter, Printer, DollarSign, Undo2, FileText, PhoneCall, Star, FlaskConical, Percent, Pencil } from 'lucide-react';
 import LabelPrintDialog from '../components/admin/LabelPrintDialog';
 import PaymentDialog from '../components/admin/PaymentDialog';
 import InvoiceDialog from '../components/admin/InvoiceDialog';
 import PhoneOrderDialog from '../components/admin/PhoneOrderDialog';
-import { recordPayment, reversePayment, setOrderFlags, setOrderTaxExempt } from '@/lib/orderMutations';
+import EditOrderDialog from '../components/admin/EditOrderDialog';
+import { recordPayment, reversePayment, setOrderFlags, setOrderTaxExempt, updateOrderItems } from '@/lib/orderMutations';
 import { format } from 'date-fns';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
 import OrderAnalytics from '../components/admin/OrderAnalytics';
@@ -30,6 +31,7 @@ export default function AdminOrders() {
   const [labelOrder, setLabelOrder] = useState(null);
   const [payOrder, setPayOrder] = useState(null);
   const [invoiceOrder, setInvoiceOrder] = useState(null);
+  const [editOrder, setEditOrder] = useState(null);
   const [showPhoneOrder, setShowPhoneOrder] = useState(false);
   const [hideTestOrders, setHideTestOrders] = useState(true);
   const queryClient = useQueryClient();
@@ -102,6 +104,16 @@ export default function AdminOrders() {
       toast.success(exempt ? 'Tax removed' : 'Tax reapplied');
     },
     onError: (e) => toast.error(e.message || 'Could not change tax'),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ order, items }) => updateOrderItems(order, items),
+    onSuccess: () => {
+      invalidateOrders();
+      setEditOrder(null);
+      toast.success('Order updated');
+    },
+    onError: (e) => toast.error(e.message || 'Could not update order'),
   });
 
   const flagsMutation = useMutation({
@@ -251,6 +263,15 @@ export default function AdminOrders() {
                       >
                         <Printer className="w-4 h-4 mr-1" />
                         Labels
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditOrder(order)}
+                        className="border-gray-300 text-gray-700"
+                      >
+                        <Pencil className="w-4 h-4 mr-1" />
+                        Edit
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -460,6 +481,15 @@ export default function AdminOrders() {
             { onSuccess: (updated) => setInvoiceOrder(updated) }
           )
         }
+      />
+
+      <EditOrderDialog
+        key={editOrder?.id}
+        order={editOrder}
+        isOpen={!!editOrder}
+        onClose={() => setEditOrder(null)}
+        isSaving={editMutation.isPending}
+        onSave={(items) => editMutation.mutate({ order: editOrder, items })}
       />
 
       <PhoneOrderDialog

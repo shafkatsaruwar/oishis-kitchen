@@ -46,6 +46,23 @@ export function orderSubtotal(order) {
   return round2((order.items || []).reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 0), 0));
 }
 
+/**
+ * Replaces an order's line items and recomputes its totals. Lines carry
+ * { name, price, quantity, special_instructions } — the same shape checkout
+ * writes — so labels, invoices and receipts keep working on edited orders.
+ * Tax follows the current rate (0 since 2026-08-16).
+ */
+export const updateOrderItems = (order, items) => {
+  const subtotal = round2(items.reduce((sum, i) => sum + i.price * i.quantity, 0));
+  const tax = round2(subtotal * TAX_RATE);
+  return updateOrder(order.id, {
+    items,
+    subtotal,
+    tax,
+    total: round2(subtotal + tax),
+  });
+};
+
 export const setOrderTaxExempt = (order, exempt) => {
   const subtotal = orderSubtotal(order);
   const tax = exempt ? 0 : round2(subtotal * TAX_RATE);
