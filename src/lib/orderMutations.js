@@ -67,7 +67,8 @@ export function generateOrderNumber() {
   return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 }
 
-export const TAX_RATE = 0.0625;
+// Taxes removed 2026-08-16 — orders store tax 0 so totals stay subtotal + tax.
+export const TAX_RATE = 0;
 
 export const round2 = (n) => Math.round(n * 100) / 100;
 

@@ -11,7 +11,7 @@ import { createPageUrl } from '../utils';
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
 
-  const TAX_RATE = 0.0625; // 6.25% MA tax
+  const TAX_RATE = 0; // taxes removed
   const subtotal = getCartTotal();
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
@@ -151,10 +151,12 @@ export default function Cart() {
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-semibold">${subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-lg">
-                      <span className="text-gray-600">Tax (6.25%)</span>
-                      <span className="font-semibold">${tax.toFixed(2)}</span>
-                    </div>
+                    {tax > 0 && (
+                      <div className="flex justify-between text-lg">
+                        <span className="text-gray-600">Tax</span>
+                        <span className="font-semibold">${tax.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="border-t-2 border-gray-200 pt-4">
                       <div className="flex justify-between text-2xl font-bold">
                         <span>Total</span>

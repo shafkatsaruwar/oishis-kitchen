@@ -462,14 +462,16 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
                 )}
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={noTax}
-                  onChange={(e) => setNoTax(e.target.checked)}
-                />
-                No tax on this order
-              </label>
+              {TAX_RATE > 0 && (
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={noTax}
+                    onChange={(e) => setNoTax(e.target.checked)}
+                  />
+                  No tax on this order
+                </label>
+              )}
 
               <div className="border-t border-gray-200 pt-3 space-y-1 text-sm">
                 {lines.map((l, i) => (
@@ -484,10 +486,12 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
                   <span>Subtotal</span>
                   <span className="tabular-nums">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-gray-500">
-                  <span>{noTax ? 'Tax (exempt)' : 'Tax (6.25%)'}</span>
-                  <span className="tabular-nums">${tax.toFixed(2)}</span>
-                </div>
+                {tax > 0 && (
+                  <div className="flex justify-between text-gray-500">
+                    <span>Tax</span>
+                    <span className="tabular-nums">${tax.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold text-gray-900">
                   <span>Total</span>
                   <span className="text-amber-600 tabular-nums">${total.toFixed(2)}</span>

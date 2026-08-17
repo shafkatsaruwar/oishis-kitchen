@@ -292,6 +292,7 @@ export default function AdminOrders() {
                         Record payment
                       </Button>
                     )}
+                    {(order.tax ?? 0) > 0 && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -313,6 +314,7 @@ export default function AdminOrders() {
                       <Percent className="w-4 h-4 mr-1" />
                       {(order.tax ?? 0) === 0 ? 'Tax exempt' : 'Remove tax'}
                     </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"

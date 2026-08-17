@@ -72,7 +72,7 @@ function InvoiceCard({ order }) {
           <span>Subtotal</span>
           <span className="tabular-nums">${subtotal.toFixed(2)}</span>
         </div>
-        {order.tax != null && (
+        {(order.tax ?? 0) > 0 && (
           <div className="flex justify-between text-gray-600">
             <span>Tax</span>
             <span className="tabular-nums">${order.tax.toFixed(2)}</span>
@@ -134,7 +134,7 @@ export default function InvoiceDialog({ order, isOpen, onClose, onToggleTax, isT
           </VisuallyHidden.Root>
           <InvoiceCard order={order} />
 
-          {onToggleTax && (
+          {onToggleTax && (order.tax ?? 0) > 0 && (
             <Button
               variant="outline"
               onClick={() => onToggleTax((order.tax ?? 0) !== 0)}

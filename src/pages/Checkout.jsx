@@ -22,7 +22,7 @@ export default function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
-  const TAX_RATE = 0.0625;
+  const TAX_RATE = 0; // taxes removed
   const subtotal = getCartTotal();
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
@@ -339,10 +339,12 @@ export default function Checkout() {
                         <span className="text-gray-600">Subtotal</span>
                         <span className="font-semibold">${subtotal.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Tax (6.25%)</span>
-                        <span className="font-semibold">${tax.toFixed(2)}</span>
-                      </div>
+                      {tax > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Tax</span>
+                          <span className="font-semibold">${tax.toFixed(2)}</span>
+                        </div>
+                      )}
                       <div className="border-t-2 border-gray-300 pt-3">
                         <div className="flex justify-between text-2xl font-bold">
                           <span>Total</span>
