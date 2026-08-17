@@ -24,6 +24,7 @@ export default function AdminMenu() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [editingItem, setEditingItem] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState({});
 
   const isAdmin = user?.email === ADMIN_EMAIL;
@@ -73,6 +74,69 @@ export default function AdminMenu() {
     onError: () => toast.error('Failed to save item'),
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (draft) => {
+      const options = (draft.options ?? [])
+        .filter(o => o.name?.trim())
+        .map(o => ({ name: o.name.trim(), price: parseFloat(o.price) || 0 }));
+      const trayOptions = (draft.tray_options ?? [])
+        .filter(o => o.name?.trim())
+        .map(o => ({ name: o.name.trim(), label: o.label || 'Full Tray', price: parseFloat(o.price) || 0 }));
+
+      // New categories go to the end; new items go to the end of their category
+      const category = draft.category?.trim();
+      const inCategory = items.filter(i => i.category === category);
+      const categoryOrder = inCategory.length > 0
+        ? inCategory[0].category_order
+        : Math.max(0, ...items.map(i => i.category_order ?? 0)) + 1;
+      const categoryIcon = inCategory.length > 0
+        ? inCategory[0].category_icon
+        : (draft.category_icon?.trim() || '🍽️');
+      const displayOrder = Math.max(0, ...inCategory.map(i => i.display_order ?? 0)) + 1;
+
+      const { data, error } = await supabase
+        .from('menu_items')
+        .insert({
+          name: draft.name.trim(),
+          description: draft.description?.trim() || '',
+          price: parseFloat(draft.price) || 0,
+          spice_level: draft.spice_level ?? 0,
+          is_available: true,
+          min_qty: 8,
+          category,
+          category_icon: categoryIcon,
+          category_order: categoryOrder,
+          display_order: displayOrder,
+          options: options.length > 0 ? options : null,
+          tray_options: trayOptions.length > 0 ? trayOptions : null,
+        })
+        .select();
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Nothing was created — please try again.');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-menu-items'] });
+      toast.success('Item added!');
+      setIsCreating(false);
+      setEditingItem(null);
+    },
+    onError: (e) => toast.error(e.message || 'Failed to add item'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('menu_items').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-menu-items'] });
+      toast.success('Item deleted');
+      setEditingItem(null);
+      setIsCreating(false);
+    },
+    onError: (e) => toast.error(e.message || 'Failed to delete item'),
+  });
+
   const setStock = useMutation({
     mutationFn: async ({ id, stock_qty }) => {
       // A dish that runs out comes off the customer menu automatically; putting
@@ -113,13 +177,25 @@ export default function AdminMenu() {
   }, {});
 
   function openEdit(item) {
+    setIsCreating(false);
     setForm({ ...item });
     setEditingItem(item);
   }
 
+  function openCreate() {
+    setIsCreating(true);
+    setForm({ name: '', description: '', price: '', spice_level: 0, category: '', category_icon: '', options: [], tray_options: [] });
+    setEditingItem({ id: '__new__' });
+  }
+
   function handleSave() {
     if (!form.name?.trim()) return;
-    saveMutation.mutate(form);
+    if (isCreating) {
+      if (!form.category?.trim()) { toast.error('Pick or type a category'); return; }
+      createMutation.mutate(form);
+    } else {
+      saveMutation.mutate(form);
+    }
   }
 
   function addOption() {
@@ -165,9 +241,15 @@ export default function AdminMenu() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Menu Management</h1>
-          <p className="text-gray-500 mt-1">Changes sync to the website instantly.</p>
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Menu Management</h1>
+            <p className="text-gray-500 mt-1">Changes sync to the website instantly.</p>
+          </div>
+          <Button onClick={openCreate} className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Item
+          </Button>
         </div>
 
         {isLoading ? (
@@ -241,10 +323,47 @@ export default function AdminMenu() {
       <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
+            <DialogTitle>{isCreating ? 'Add Item' : 'Edit Item'}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2 overflow-y-auto pr-1">
+            {isCreating && (
+              <div className="space-y-1.5">
+                <Label>Category</Label>
+                <div className="flex gap-2 flex-wrap mb-1">
+                  {Object.keys(grouped).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, category: cat }))}
+                      className={`px-2.5 py-1 rounded-full text-xs border ${
+                        form.category === cat
+                          ? 'bg-amber-500 border-amber-500 text-white'
+                          : 'border-gray-200 text-gray-600 hover:border-amber-300'
+                      }`}
+                    >
+                      {grouped[cat].icon} {cat}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={form.category ?? ''}
+                    onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                    placeholder="Or type a new category"
+                  />
+                  {!grouped[form.category?.trim()] && (
+                    <Input
+                      value={form.category_icon ?? ''}
+                      onChange={e => setForm(f => ({ ...f, category_icon: e.target.value }))}
+                      placeholder="Icon"
+                      className="w-16 text-center"
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label>Name</Label>
               <Input
@@ -388,15 +507,31 @@ export default function AdminMenu() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingItem(null)}>Cancel</Button>
-            <Button
-              onClick={handleSave}
-              disabled={!form.name?.trim() || saveMutation.isPending}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
-            >
-              {saveMutation.isPending ? 'Saving…' : 'Save'}
-            </Button>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {!isCreating && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (window.confirm(`Delete "${form.name}" from the menu? This cannot be undone.`)) {
+                    deleteMutation.mutate(form.id);
+                  }
+                }}
+                disabled={deleteMutation.isPending}
+                className="border-red-200 text-red-600 hover:bg-red-50 sm:mr-auto"
+              >
+                Delete
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => { setEditingItem(null); setIsCreating(false); }}>Cancel</Button>
+              <Button
+                onClick={handleSave}
+                disabled={!form.name?.trim() || saveMutation.isPending || createMutation.isPending}
+                className="bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                {saveMutation.isPending || createMutation.isPending ? 'Saving…' : isCreating ? 'Add' : 'Save'}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

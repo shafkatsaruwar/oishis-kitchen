@@ -32,7 +32,8 @@ function variantsFor(item) {
   for (const tray of item.tray_options || []) {
     out.push({
       key: `tray:${tray.name}:${tray.label}`,
-      chip: tray.name === item.name ? tray.label : tray.name,
+      // Include the label when the name repeats (Full vs Half Tray)
+      chip: tray.name === item.name ? tray.label : `${tray.name} · ${tray.label}`,
       lineName: `${tray.name} (${tray.label})`,
       price: tray.price,
       isTray: true,
@@ -360,12 +361,16 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
             </div>
 
             {itemCount > 0 && (
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-3 flex items-center justify-between">
-                <div>
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-3 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs text-gray-500">
                     {itemCount} item{itemCount === 1 ? '' : 's'}
                   </p>
                   <p className="text-xl font-bold text-amber-600">${subtotal.toFixed(2)}</p>
+                  {/* What's in the cart, at a glance */}
+                  <p className="text-[11px] text-gray-500 truncate">
+                    {lines.map((l) => `${l.quantity}× ${l.name}`).join(' · ')}
+                  </p>
                 </div>
                 <Button
                   onClick={() => setStep('details')}
