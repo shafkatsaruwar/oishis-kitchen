@@ -27,7 +27,13 @@ function nameSize(name = '') {
  * top, logo boxed on the left, dish name and note in the middle, pickup details
  * borderless on the right.
  */
+// The tray size matters on the invoice, not on the container — the label
+// reads "Chicken Biryani", not "Chicken Biryani (Full Tray)".
+const cleanLabelName = (name = '') =>
+  name.replace(/\s*\((?:full|half) tray\)\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+
 export function Label({ name, note, date, time }) {
+  const displayName = cleanLabelName(name);
   return (
     <div className="ok-label">
       <div className="ok-label-bar" />
@@ -36,8 +42,8 @@ export function Label({ name, note, date, time }) {
           <img src="/logo.png" alt="" />
         </div>
         <div className="ok-label-text">
-          <div className="ok-label-name" style={{ fontSize: `${nameSize(name)}pt` }}>
-            {name}
+          <div className="ok-label-name" style={{ fontSize: `${nameSize(displayName)}pt` }}>
+            {displayName}
           </div>
           {note && <div className="ok-label-note">{note}</div>}
         </div>
