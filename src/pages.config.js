@@ -6,6 +6,7 @@ import AdminCalendar from './pages/AdminCalendar';
 import AdminReviews from './pages/AdminReviews';
 import AdminLabels from './pages/AdminLabels';
 import AdminPOS from './pages/AdminPOS';
+import AdminInventory from './pages/AdminInventory';
 import BookEvent from './pages/BookEvent';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -34,6 +35,7 @@ export const PAGES = {
     "AdminReviews": AdminReviews,
     "AdminLabels": AdminLabels,
     "AdminPOS": AdminPOS,
+    "AdminInventory": AdminInventory,
     "BookEvent": BookEvent,
     "Cart": Cart,
     "Checkout": Checkout,

@@ -23,6 +23,7 @@ const ADMIN_PAGES = [
   'AdminReviews',
   'AdminLabels',
   'AdminPOS',
+  'AdminInventory',
 ];
 
 function LayoutContent({ children, currentPageName }) {
