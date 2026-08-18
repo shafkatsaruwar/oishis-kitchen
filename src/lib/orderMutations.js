@@ -101,6 +101,9 @@ export async function createPhoneOrder({
   paidNow,
   paymentMethod,
   noTax = false,
+  // 'confirmed' for phone orders; the register writes 'completed' — the sale is
+  // done the moment it's rung up
+  status = 'confirmed',
 }) {
   const subtotal = round2(items.reduce((sum, i) => sum + i.price * i.quantity, 0));
   // Tax-exempt orders still store a tax of 0 rather than null, so every total
@@ -112,9 +115,9 @@ export async function createPhoneOrder({
     .from('orders')
     .insert({
       order_number: generateOrderNumber(),
-      customer_name: customerName.trim(),
+      customer_name: (customerName || 'Walk-in').trim(),
       customer_email: (customerEmail || '').trim(),
-      customer_phone: customerPhone.trim(),
+      customer_phone: (customerPhone || '').trim(),
       items,
       subtotal,
       tax,
@@ -122,7 +125,7 @@ export async function createPhoneOrder({
       pickup_date: pickupDate,
       pickup_time: pickupTime,
       special_requests: specialRequests?.trim() || null,
-      status: 'confirmed',
+      status,
       payment_method: paidNow ? paymentMethod : 'pay_on_pickup',
       payment_status: paidNow ? 'paid' : 'pending',
     })
