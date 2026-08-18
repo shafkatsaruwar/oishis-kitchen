@@ -159,35 +159,7 @@ function LayoutContent({ children, currentPageName }) {
                       {isAdmin && (
                         <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
                           <Link to={createPageUrl('AdminOrders')} className="cursor-pointer">
-                            Manage Orders
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      {isAdmin && (
-                        <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
-                          <Link to={createPageUrl('AdminMenu')} className="cursor-pointer">
-                            Manage Menu
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      {isAdmin && (
-                        <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
-                          <Link to={createPageUrl('AdminCalendar')} className="cursor-pointer">
-                            Pickup Calendar
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      {isAdmin && (
-                        <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
-                          <Link to={createPageUrl('AdminGrocery')} className="cursor-pointer">
-                            Grocery List
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      {isAdmin && (
-                        <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
-                          <Link to={createPageUrl('AdminReviews')} className="cursor-pointer">
-                            Reviews
+                            Admin
                           </Link>
                         </DropdownMenuItem>
                       )}

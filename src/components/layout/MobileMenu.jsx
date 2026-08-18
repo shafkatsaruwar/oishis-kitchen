@@ -79,17 +79,7 @@ export default function MobileMenu({ user, isAdmin, onLogout, transparent = fals
                           className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 border-b border-ink-100 rounded-sm"
                         >
                           <Settings className="w-4 h-4 text-ink-400" />
-                          <span className="font-dm text-sm">Manage Orders</span>
-                        </Link>
-                      )}
-                      {isAdmin && (
-                        <Link
-                          to={createPageUrl('AdminMenu')}
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 border-b border-ink-100 rounded-sm"
-                        >
-                          <Settings className="w-4 h-4 text-ink-400" />
-                          <span className="font-dm text-sm">Manage Menu</span>
+                          <span className="font-dm text-sm">Admin</span>
                         </Link>
                       )}
                       <button
