@@ -131,7 +131,10 @@ export default function AdminShell({ currentPageName, children }) {
         </button>
       </aside>
 
-      <main className="flex-1 min-w-0 overflow-hidden">{children}</main>
+      {/* Scrolls here rather than on the document: the rail stays put while long
+          pages (menu, orders, inventory) run past the fold. The register opts out
+          with its own h-full/overflow-hidden root and never scrolls this. */}
+      <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
     </div>
   );
 }
