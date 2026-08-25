@@ -21,6 +21,8 @@ import {
   Boxes,
   User,
   Banknote,
+  Star,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -34,6 +36,17 @@ const QUICK = [10, 20, 50, 100];
 
 // QR screenshots live on the register device, same model as the iOS Payments tab.
 const QR_KEYS = { venmo: 'ok_pos_venmo_qr', zelle: 'ok_pos_zelle_qr' };
+
+// Favourites are the high-runners you tap all day. Kept on the register device,
+// same as the QR codes — no setup, works the moment you star something.
+const FAV_KEY = 'ok_pos_favorites';
+const readFavorites = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
+  } catch {
+    return new Set();
+  }
+};
 const readQR = (method) => {
   try {
     return localStorage.getItem(QR_KEYS[method]) || null;
@@ -82,7 +95,7 @@ function DishThumb({ name, size = 'lg' }) {
     <div
       className={cn(
         'flex items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold flex-none',
-        size === 'lg' ? 'w-full aspect-[4/3] text-3xl' : 'w-12 h-12 text-lg'
+        size === 'lg' ? 'w-full h-20 text-2xl' : 'w-12 h-12 text-lg'
       )}
     >
       {letter}
@@ -283,6 +296,8 @@ export default function AdminPOS() {
   const [showEOD, setShowEOD] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [qrVersion, setQrVersion] = useState(0);
+  const [favorites, setFavorites] = useState(readFavorites);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const { data: menu = [] } = useQuery({
     queryKey: ['admin-menu-items'],
@@ -310,11 +325,25 @@ export default function AdminPOS() {
   }, [menu]);
 
   const shownItems = useMemo(() => {
-    const pool = category ? categories.find((c) => c.name === category)?.items || [] : menu;
+    const pool =
+      category === 'favorites'
+        ? menu.filter((i) => favorites.has(i.id))
+        : category
+          ? categories.find((c) => c.name === category)?.items || []
+          : menu;
     return pool.filter(
       (i) => i.is_available && (!search || i.name.toLowerCase().includes(search.toLowerCase()))
     );
-  }, [menu, categories, category, search]);
+  }, [menu, categories, category, search, favorites]);
+
+  // Starred items ride at the top of whatever is on screen.
+  const [starredItems, otherItems] = useMemo(() => {
+    if (category === 'favorites') return [shownItems, []];
+    return [
+      shownItems.filter((i) => favorites.has(i.id)),
+      shownItems.filter((i) => !favorites.has(i.id)),
+    ];
+  }, [shownItems, favorites, category]);
 
   const subtotal = round2(lines.reduce((s, l) => s + l.price * l.quantity, 0));
   const tax = round2(subtotal * TAX_RATE);
@@ -327,6 +356,18 @@ export default function AdminPOS() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const activeQR = useMemo(() => readQR(method), [method, qrVersion]);
+
+  const toggleFavorite = (id) =>
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      try {
+        localStorage.setItem(FAV_KEY, JSON.stringify([...next]));
+      } catch {
+        /* a full quota shouldn't break ringing up a sale */
+      }
+      return next;
+    });
 
   const currentVariant = (item) => {
     const opts = variantsFor(item);
@@ -413,6 +454,22 @@ export default function AdminPOS() {
     }
   };
 
+  // Two taps, not a blocking confirm() — a modal dialog stalls the whole
+  // register, and at a counter you want the undo to be visual, not modal.
+  const clearTicket = () => {
+    if (lines.length === 0) return;
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 3000);
+      return;
+    }
+    setLines([]);
+    setChosenVariant({});
+    setStage('items');
+    setTenderedText('');
+    setConfirmClear(false);
+  };
+
   const newSale = () => {
     setLines([]);
     setStage('items');
@@ -420,6 +477,84 @@ export default function AdminPOS() {
     setMethod('cash');
     setDone(null);
     setSearch('');
+  };
+
+  const itemCard = (item) => {
+    const opts = variantsFor(item);
+    const variant = currentVariant(item);
+    const qty = qtyOf(item, variant.key);
+    const starred = favorites.has(item.id);
+    return (
+      <div
+        key={item.id}
+        className={cn(
+          'relative bg-white rounded-2xl p-3 flex flex-col transition-shadow',
+          qty > 0 ? 'ring-2 ring-amber-400 shadow-md' : 'hover:shadow-md'
+        )}
+      >
+        <button
+          onClick={() => toggleFavorite(item.id)}
+          aria-label={starred ? `Unfavourite ${item.name}` : `Favourite ${item.name}`}
+          data-testid={`pos-fav-${item.id}`}
+          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm"
+        >
+          <Star
+            className={cn(
+              'w-4 h-4 transition-colors',
+              starred ? 'fill-amber-500 text-amber-500' : 'text-ink-300'
+            )}
+          />
+        </button>
+
+        <DishThumb name={item.name} />
+        <p className="mt-2.5 text-base font-semibold text-ink-900 leading-snug line-clamp-2">
+          {item.name}
+        </p>
+        {opts.length > 1 && (
+          <div className="flex gap-1 flex-wrap mt-2">
+            {opts.map((o) => (
+              <button
+                key={o.key}
+                onClick={() => setChosenVariant((p) => ({ ...p, [item.id]: o.key }))}
+                className={cn(
+                  'px-2 py-0.5 rounded-md text-xs font-medium leading-5',
+                  o.key === variant.key
+                    ? o.isTray
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-amber-500 text-white'
+                    : 'bg-gray-100 text-gray-600'
+                )}
+              >
+                {o.chip}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mt-auto pt-3 flex items-center justify-between">
+          <span
+            className={cn(
+              'text-lg font-bold tabular-nums',
+              variant.isTray ? 'text-purple-600' : 'text-ink-900'
+            )}
+          >
+            ${variant.price.toFixed(2)}
+          </span>
+          <button
+            onClick={() => addOne(item, variant)}
+            aria-label={`Add ${item.name}`}
+            data-testid={`pos-add-${item.id}`}
+            className="w-9 h-9 rounded-full bg-ink-900 text-white flex items-center justify-center hover:bg-ink-700 relative"
+          >
+            <Plus className="w-4 h-4" />
+            {qty > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                {qty}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+    );
   };
 
   if (!isAdmin) {
@@ -440,7 +575,7 @@ export default function AdminPOS() {
               <p className="text-sm font-semibold text-amber-600 mb-1">Items</p>
               <div className="flex items-center gap-3 mb-4">
                 <h1 className="text-3xl font-bold text-ink-900">
-                  {category || 'All items'}
+                  {category === 'favorites' ? 'Favourites' : category || 'All items'}
                 </h1>
                 <div className="flex-1" />
                 <div className="relative w-full max-w-md">
@@ -479,6 +614,26 @@ export default function AdminPOS() {
                 >
                   All
                 </button>
+                {favorites.size > 0 && (
+                  <button
+                    onClick={() => setCategory('favorites')}
+                    data-testid="pos-cat-favorites"
+                    className={cn(
+                      'px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5',
+                      category === 'favorites'
+                        ? 'bg-ink-900 text-white'
+                        : 'bg-white text-ink-600 hover:bg-ink-50'
+                    )}
+                  >
+                    <Star
+                      className={cn(
+                        'w-3.5 h-3.5',
+                        category === 'favorites' ? 'fill-white' : 'fill-amber-500 text-amber-500'
+                      )}
+                    />
+                    Favourites
+                  </button>
+                )}
                 {categories.map((c) => (
                   <button
                     key={c.name}
@@ -497,70 +652,36 @@ export default function AdminPOS() {
             </header>
 
             <div className="flex-1 overflow-y-auto pr-1">
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-                {shownItems.map((item) => {
-                  const opts = variantsFor(item);
-                  const variant = currentVariant(item);
-                  const qty = qtyOf(item, variant.key);
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        'bg-white rounded-2xl p-3 flex flex-col transition-shadow',
-                        qty > 0 ? 'ring-2 ring-amber-400 shadow-md' : 'hover:shadow-md'
-                      )}
-                    >
-                      <DishThumb name={item.name} />
-                      <p className="mt-3 text-sm font-medium text-ink-900 leading-snug line-clamp-2">
-                        {item.name}
-                      </p>
-                      {opts.length > 1 && (
-                        <div className="flex gap-1 flex-wrap mt-1.5">
-                          {opts.map((o) => (
-                            <button
-                              key={o.key}
-                              onClick={() => setChosenVariant((p) => ({ ...p, [item.id]: o.key }))}
-                              className={cn(
-                                'px-1.5 py-0.5 rounded-full text-[10px] font-medium',
-                                o.key === variant.key
-                                  ? o.isTray
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-amber-500 text-white'
-                                  : 'bg-gray-100 text-gray-600'
-                              )}
-                            >
-                              {o.chip}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-auto pt-3 flex items-center justify-between">
-                        <span
-                          className={cn(
-                            'font-bold tabular-nums',
-                            variant.isTray ? 'text-purple-600' : 'text-ink-900'
-                          )}
-                        >
-                          ${variant.price.toFixed(2)}
-                        </span>
-                        <button
-                          onClick={() => addOne(item, variant)}
-                          aria-label={`Add ${item.name}`}
-                          data-testid={`pos-add-${item.id}`}
-                          className="w-9 h-9 rounded-full bg-ink-900 text-white flex items-center justify-center hover:bg-ink-700 relative"
-                        >
-                          <Plus className="w-4 h-4" />
-                          {qty > 0 && (
-                            <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                              {qty}
-                            </span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {starredItems.length > 0 && (
+                <>
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-2 tracking-wide">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    FAVOURITES
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-5">
+                    {starredItems.map(itemCard)}
+                  </div>
+                </>
+              )}
+              {otherItems.length > 0 && (
+                <>
+                  {starredItems.length > 0 && (
+                    <p className="text-xs font-bold text-ink-400 mb-2 tracking-wide">
+                      EVERYTHING ELSE
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                    {otherItems.map(itemCard)}
+                  </div>
+                </>
+              )}
+              {shownItems.length === 0 && (
+                <p className="text-center text-ink-400 py-16">
+                  {category === 'favorites'
+                    ? 'No favourites yet — tap the star on any item.'
+                    : 'Nothing matches.'}
+                </p>
+              )}
             </div>
           </>
         )}
@@ -578,7 +699,7 @@ export default function AdminPOS() {
             <h1 className="text-3xl font-bold text-ink-900 mb-1">Payment Methods</h1>
             <p className="text-ink-500 mb-6">Choose payment method</p>
 
-            <div className="grid grid-cols-3 gap-4 max-w-2xl">
+            <div className="grid grid-cols-3 gap-5 max-w-4xl">
               {METHODS.map((m) => (
                 <button
                   key={m.id}
@@ -588,22 +709,22 @@ export default function AdminPOS() {
                   }}
                   data-testid={`pos-method-${m.id}`}
                   className={cn(
-                    'rounded-2xl p-5 text-left transition-all border-2',
+                    'rounded-3xl px-6 py-10 text-center transition-all border-2',
                     method === m.id
-                      ? 'bg-ink-900 text-white border-ink-900'
+                      ? 'bg-ink-900 text-white border-ink-900 shadow-lg'
                       : 'bg-white border-gray-200 hover:border-gray-300'
                   )}
                 >
-                  <div className="text-2xl mb-2">{m.glyph}</div>
-                  <div className="font-semibold">{m.label}</div>
+                  <div className="text-5xl mb-3">{m.glyph}</div>
+                  <div className="text-xl font-bold">{m.label}</div>
                 </button>
               ))}
             </div>
 
-            <div className="mt-8 max-w-2xl">
+            <div className="mt-10 max-w-4xl">
               {method === 'cash' ? (
                 <>
-                  <p className="text-xs font-semibold text-gray-500 mb-2">CASH RECEIVED</p>
+                  <p className="text-sm font-bold text-gray-500 mb-3 tracking-wide">CASH RECEIVED</p>
                   <Input
                     type="number"
                     inputMode="decimal"
@@ -611,14 +732,14 @@ export default function AdminPOS() {
                     value={tenderedText}
                     onChange={(e) => setTenderedText(e.target.value)}
                     placeholder="0.00"
-                    className="text-2xl font-bold h-14 rounded-xl bg-white"
+                    className="!text-4xl font-bold h-20 rounded-2xl bg-white px-6"
                     data-testid="pos-tendered"
                     autoFocus
                   />
-                  <div className="flex gap-2 flex-wrap mt-3">
+                  <div className="flex gap-3 flex-wrap mt-4">
                     <button
                       onClick={() => setTenderedText(total.toFixed(2))}
-                      className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium"
+                      className="px-8 py-4 rounded-2xl bg-white border-2 border-gray-200 text-lg font-semibold hover:border-ink-900"
                     >
                       Exact
                     </button>
@@ -626,7 +747,7 @@ export default function AdminPOS() {
                       <button
                         key={v}
                         onClick={() => setTenderedText(v.toFixed(2))}
-                        className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium"
+                        className="px-8 py-4 rounded-2xl bg-white border-2 border-gray-200 text-lg font-semibold hover:border-ink-900"
                       >
                         ${v}
                       </button>
@@ -635,12 +756,12 @@ export default function AdminPOS() {
                   {change != null && (
                     <div
                       className={cn(
-                        'mt-4 p-4 rounded-xl flex justify-between font-bold',
+                        'mt-5 px-8 py-6 rounded-2xl flex justify-between items-center font-bold',
                         change >= 0 ? 'bg-orange-50 text-orange-700' : 'bg-red-50 text-red-600'
                       )}
                     >
-                      <span>{change >= 0 ? 'Change to give' : 'Short by'}</span>
-                      <span className="text-xl tabular-nums">${Math.abs(change).toFixed(2)}</span>
+                      <span className="text-xl">{change >= 0 ? 'Change to give' : 'Short by'}</span>
+                      <span className="text-5xl tabular-nums">${Math.abs(change).toFixed(2)}</span>
                     </div>
                   )}
                 </>
@@ -652,7 +773,7 @@ export default function AdminPOS() {
                   <img
                     src={activeQR}
                     alt={`${method} QR code`}
-                    className="w-64 mx-auto rounded-2xl border border-gray-200 bg-white p-2"
+                    className="w-80 mx-auto rounded-2xl border border-gray-200 bg-white p-3"
                   />
                 </div>
               ) : (
@@ -703,7 +824,23 @@ export default function AdminPOS() {
       {/* ─────────── Current Order ─────────── */}
       <aside className="w-[340px] flex-none bg-white rounded-2xl flex flex-col overflow-hidden">
         <div className="p-5 pb-3 flex-none">
-          <h2 className="text-xl font-bold text-ink-900 mb-3">Current Order</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold text-ink-900">Current Order</h2>
+            {lines.length > 0 && (
+              <button
+                onClick={clearTicket}
+                data-testid="pos-clear"
+                aria-label="Clear ticket"
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors',
+                  confirmClear ? 'bg-red-500 text-white' : 'text-red-500 hover:bg-red-50'
+                )}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {confirmClear ? 'Tap to confirm' : 'Clear'}
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-2 text-sm text-ink-600">
             <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center">
               <User className="w-4 h-4 text-amber-700" />
