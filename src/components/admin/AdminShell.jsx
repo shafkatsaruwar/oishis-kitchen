@@ -4,21 +4,22 @@ import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
 import {
-  Boxes,
-  Banknote,
-  Tag,
+  LayoutGrid,
   ClipboardList,
-  UtensilsCrossed,
   CalendarDays,
+  UtensilsCrossed,
+  Boxes,
   ShoppingCart,
+  Tag,
   MessageSquare,
-  LogOut,
   ExternalLink,
+  Power,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// The register is the app. Everything else is a stop on the rail.
 const SECTIONS = [
-  { page: 'AdminPOS', label: 'Register', icon: Banknote },
+  { page: 'AdminPOS', label: 'Register', icon: LayoutGrid },
   { page: 'AdminOrders', label: 'Orders', icon: ClipboardList, badge: 'pendingOrders' },
   { page: 'AdminCalendar', label: 'Calendar', icon: CalendarDays },
   { page: 'AdminMenu', label: 'Menu', icon: UtensilsCrossed, badge: 'lowStock' },
@@ -29,10 +30,8 @@ const SECTIONS = [
 ];
 
 /**
- * Chrome for every admin page: one persistent nav so moving between sections is
- * a single click, with the customer-facing header, order bar and contact buttons
- * out of the way. Live counts sit on Orders and Reviews so the things that need
- * attention are visible without opening them.
+ * A narrow icon rail, not a menu. The register fills the screen on open; orders,
+ * reviews and the rest are one icon away rather than competing for attention.
  */
 export default function AdminShell({ currentPageName, children }) {
   const { user, logout } = useAuth();
@@ -45,7 +44,6 @@ export default function AdminShell({ currentPageName, children }) {
       const [orders, reviews, stock] = await Promise.all([
         supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        // Dishes running low or out. stock_qty is null when a dish isn't tracked.
         supabase.from('menu_items').select('stock_qty, low_stock_threshold').not('stock_qty', 'is', null),
       ]);
       const lowStock = (stock.data || []).filter(
@@ -67,69 +65,73 @@ export default function AdminShell({ currentPageName, children }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex flex-col lg:flex-row">
-      {/* Sidebar — becomes a top strip on narrow screens */}
-      <aside className="lg:w-60 lg:min-h-screen bg-white border-b lg:border-b-0 lg:border-r border-ink-100 flex lg:flex-col lg:sticky lg:top-0 lg:h-screen">
-        <div className="hidden lg:flex items-center gap-2 px-5 py-5 border-b border-ink-100">
-          <img src="/logo.png" alt="" className="w-8 h-8 rounded object-contain" />
-          <div>
-            <p className="font-serif text-lg leading-none text-ink-900">Oishi's</p>
-            <p className="text-[11px] tracking-widest text-amber-600 uppercase">Admin</p>
-          </div>
-        </div>
+    <div className="h-screen bg-[#f1f2f4] flex overflow-hidden">
+      {/* Icon rail */}
+      <aside className="w-[76px] flex-none bg-white flex flex-col items-center py-4 gap-1 border-r border-ink-100">
+        <Link to={createPageUrl('AdminPOS')} className="mb-3" title="Register">
+          <img src="/logo.png" alt="Oishi's" className="w-11 h-11 rounded-xl object-contain" />
+        </Link>
 
-        {/* Mobile: five even columns so nothing needs scrolling. Desktop: a list. */}
-        <nav className="flex lg:flex-col gap-1 p-2 lg:p-3 flex-1 w-full">
-          {SECTIONS.map(({ page, label, icon: Icon, badge }) => {
-            const active = currentPageName === page;
-            const count = badge ? badges[badge] : 0;
-            return (
-              <Link
-                key={page}
-                to={createPageUrl(page)}
-                className={cn(
-                  'relative flex-1 lg:flex-none flex flex-col lg:flex-row items-center lg:gap-3 gap-0.5 px-1 lg:px-3 py-2 rounded-lg transition-colors',
-                  active
-                    ? 'bg-amber-500 text-white font-semibold'
-                    : 'text-ink-600 hover:bg-amber-50 hover:text-amber-700'
-                )}
-              >
-                <Icon className="w-4 h-4 flex-none" />
-                <span className="text-[10px] lg:text-sm lg:flex-1 whitespace-nowrap">{label}</span>
-                {count > 0 && (
-                  <span
-                    className={cn(
-                      'text-[10px] lg:text-[11px] font-bold px-1.5 rounded-full absolute lg:static top-1 right-1 lg:top-auto lg:right-auto',
-                      active ? 'bg-white/25 text-white' : 'bg-orange-100 text-orange-700'
-                    )}
-                  >
-                    {count}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        {SECTIONS.map(({ page, label, icon: Icon, badge }) => {
+          const active = currentPageName === page;
+          const count = badge ? badges[badge] : 0;
+          return (
+            <Link
+              key={page}
+              to={createPageUrl(page)}
+              title={label}
+              aria-label={label}
+              className={cn(
+                'group relative w-12 h-12 rounded-xl flex items-center justify-center transition-colors',
+                active ? 'bg-amber-500 text-white' : 'text-ink-400 hover:bg-amber-50 hover:text-amber-600'
+              )}
+            >
+              <Icon className="w-5 h-5" />
+              {count > 0 && (
+                <span
+                  className={cn(
+                    'absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center',
+                    active ? 'bg-white text-amber-600' : 'bg-orange-500 text-white'
+                  )}
+                >
+                  {count}
+                </span>
+              )}
+              {/* Name appears on hover — the rail stays narrow */}
+              <span className="pointer-events-none absolute left-full ml-2 z-50 whitespace-nowrap rounded-md bg-ink-900 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                {label}
+              </span>
+            </Link>
+          );
+        })}
 
-        <div className="hidden lg:block p-3 border-t border-ink-100 space-y-1">
-          <Link
-            to={createPageUrl('Home')}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-ink-500 hover:bg-ink-50"
-          >
-            <ExternalLink className="w-4 h-4" />
+        <div className="flex-1" />
+
+        <Link
+          to={createPageUrl('Home')}
+          title="View site"
+          aria-label="View site"
+          className="group relative w-12 h-12 rounded-xl flex items-center justify-center text-ink-400 hover:bg-ink-50"
+        >
+          <ExternalLink className="w-5 h-5" />
+          <span className="pointer-events-none absolute left-full ml-2 z-50 whitespace-nowrap rounded-md bg-ink-900 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
             View site
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50"
-          >
-            <LogOut className="w-4 h-4" />
+          </span>
+        </Link>
+        <button
+          onClick={handleLogout}
+          title="Log out"
+          aria-label="Log out"
+          className="group relative w-12 h-12 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-50"
+        >
+          <Power className="w-5 h-5" />
+          <span className="pointer-events-none absolute left-full ml-2 z-50 whitespace-nowrap rounded-md bg-ink-900 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
             Log out
-          </button>
-        </div>
+          </span>
+        </button>
       </aside>
 
-      <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex-1 min-w-0 overflow-hidden">{children}</main>
     </div>
   );
 }

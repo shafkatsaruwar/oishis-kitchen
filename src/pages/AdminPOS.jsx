@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -9,31 +9,38 @@ import { createPhoneOrder, round2, TAX_RATE } from '@/lib/orderMutations';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-  Banknote,
+  Search,
+  SlidersHorizontal,
   Minus,
   Plus,
-  X,
+  ArrowLeft,
   RotateCcw,
-  Settings,
   BarChart3,
+  QrCode,
   UtensilsCrossed,
   Boxes,
-  QrCode,
+  User,
+  Banknote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const METHODS = [
-  { id: 'cash', label: '💵 Cash' },
-  { id: 'venmo', label: '💙 Venmo' },
-  { id: 'zelle', label: '💜 Zelle' },
+  { id: 'cash', label: 'Cash', glyph: '💵' },
+  { id: 'venmo', label: 'Venmo', glyph: '💙' },
+  { id: 'zelle', label: 'Zelle', glyph: '💜' },
 ];
 const QUICK = [10, 20, 50, 100];
 
-// The register's QR codes are the user's own Venmo/Zelle QR screenshots,
-// stored on this device — the same model as the iOS Payments tab, which keeps
-// them in AppStorage. One register device, one setup.
+// QR screenshots live on the register device, same model as the iOS Payments tab.
 const QR_KEYS = { venmo: 'ok_pos_venmo_qr', zelle: 'ok_pos_zelle_qr' };
+const readQR = (method) => {
+  try {
+    return localStorage.getItem(QR_KEYS[method]) || null;
+  } catch {
+    return null;
+  }
+};
 
 /** Every orderable variant of a dish, flattened for one-tap ringing. */
 function variantsFor(item) {
@@ -68,12 +75,19 @@ function variantsFor(item) {
   return out;
 }
 
-function readQR(method) {
-  try {
-    return localStorage.getItem(QR_KEYS[method]) || null;
-  } catch {
-    return null;
-  }
+/** A dish tile's stand-in for a photo — first letter on a warm wash. */
+function DishThumb({ name, size = 'lg' }) {
+  const letter = (name || '?').trim().charAt(0).toUpperCase();
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-bold flex-none',
+        size === 'lg' ? 'w-full aspect-[4/3] text-3xl' : 'w-12 h-12 text-lg'
+      )}
+    >
+      {letter}
+    </div>
+  );
 }
 
 /** Today's takings, split the way you'd count the drawer. */
@@ -96,7 +110,6 @@ function EndOfDayDialog({ isOpen, onClose }) {
 
   const rows = (data || []).filter((o) => o.is_test !== true);
   const paid = rows.filter((o) => o.payment_status === 'paid');
-  const byMethod = (m) => paid.filter((o) => (o.payment_method || 'cash') === m);
   const sum = (list) => round2(list.reduce((s, o) => s + (o.total || 0), 0));
   const unpaid = rows.filter((o) => o.payment_status !== 'paid' && o.status !== 'cancelled');
 
@@ -105,14 +118,6 @@ function EndOfDayDialog({ isOpen, onClose }) {
       <DialogContent className="bg-white max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900">End of day</DialogTitle>
-          <p className="text-sm text-gray-600">
-            {new Date().toLocaleDateString(undefined, {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-            {' · '}orders placed today
-          </p>
         </DialogHeader>
         {isLoading ? (
           <p className="text-center text-gray-500 py-8">Counting…</p>
@@ -128,37 +133,26 @@ function EndOfDayDialog({ isOpen, onClose }) {
               </p>
             </div>
             <div className="space-y-2">
-              {['cash', 'venmo', 'zelle'].map((m) => {
-                const list = byMethod(m);
+              {METHODS.map((m) => {
+                const list = paid.filter((o) => (o.payment_method || 'cash') === m.id);
                 return (
                   <div
-                    key={m}
+                    key={m.id}
                     className="flex justify-between items-center p-3 rounded-lg bg-gray-50 text-sm"
                   >
-                    <span className="capitalize text-gray-700">
-                      {m === 'cash' ? '💵' : m === 'venmo' ? '💙' : '💜'} {m}
+                    <span className="text-gray-700">
+                      {m.glyph} {m.label}
                       <span className="text-gray-400"> · {list.length}</span>
                     </span>
                     <span className="font-bold tabular-nums">${sum(list).toFixed(2)}</span>
                   </div>
                 );
               })}
-              {(() => {
-                const other = paid.filter(
-                  (o) => !['cash', 'venmo', 'zelle'].includes(o.payment_method || 'cash')
-                );
-                return other.length > 0 ? (
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 text-sm">
-                    <span className="text-gray-700">Other · {other.length}</span>
-                    <span className="font-bold tabular-nums">${sum(other).toFixed(2)}</span>
-                  </div>
-                ) : null;
-              })()}
             </div>
             {unpaid.length > 0 && (
               <div className="flex justify-between items-center p-3 rounded-lg bg-orange-50 text-sm">
                 <span className="text-orange-700">
-                  Still owed ({unpaid.length} unpaid order{unpaid.length === 1 ? '' : 's'})
+                  Still owed ({unpaid.length} unpaid)
                 </span>
                 <span className="font-bold text-orange-700 tabular-nums">
                   ${sum(unpaid).toFixed(2)}
@@ -172,7 +166,7 @@ function EndOfDayDialog({ isOpen, onClose }) {
   );
 }
 
-/** Register settings: the payment QR codes, and doors to menu and inventory. */
+/** Register settings: payment QR codes and doors to menu and inventory. */
 function SettingsDialog({ isOpen, onClose, onQRChange }) {
   const [venmoQR, setVenmoQR] = useState(() => readQR('venmo'));
   const [zelleQR, setZelleQR] = useState(() => readQR('zelle'));
@@ -194,24 +188,17 @@ function SettingsDialog({ isOpen, onClose, onQRChange }) {
     reader.readAsDataURL(file);
   };
 
-  const clear = (method, setter) => {
-    localStorage.removeItem(QR_KEYS[method]);
-    setter(null);
-    onQRChange();
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900">Register settings</DialogTitle>
         </DialogHeader>
-
         <div>
           <p className="text-xs font-semibold text-gray-500 mb-2">PAYMENT QR CODES</p>
           <p className="text-xs text-gray-500 mb-3">
-            Screenshot your QR in the Venmo / Zelle app and upload it here. It's stored on this
-            device and shown to the customer at charge time.
+            Screenshot your QR in the Venmo / Zelle app and upload it. Stored on this device and
+            shown to the customer at payment.
           </p>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -224,7 +211,11 @@ function SettingsDialog({ isOpen, onClose, onQRChange }) {
                   <>
                     <img src={img} alt={`${method} QR`} className="w-full rounded-lg mb-2" />
                     <button
-                      onClick={() => clear(method, setter)}
+                      onClick={() => {
+                        localStorage.removeItem(QR_KEYS[method]);
+                        setter(null);
+                        onQRChange();
+                      }}
                       className="text-xs text-red-500 underline"
                     >
                       Remove
@@ -236,19 +227,13 @@ function SettingsDialog({ isOpen, onClose, onQRChange }) {
                       <QrCode className="w-8 h-8 mx-auto mb-1" />
                       <span className="text-xs">Upload QR image</span>
                     </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={upload(method, setter)}
-                    />
+                    <input type="file" accept="image/*" className="hidden" onChange={upload(method, setter)} />
                   </label>
                 )}
               </div>
             ))}
           </div>
         </div>
-
         <div>
           <p className="text-xs font-semibold text-gray-500 mb-2">MANAGE</p>
           <div className="grid grid-cols-2 gap-2">
@@ -274,24 +259,25 @@ function SettingsDialog({ isOpen, onClose, onQRChange }) {
 }
 
 /**
- * The register — Square-style. Food fills the left; the ticket and money live
- * on the right. Venmo/Zelle charges show the customer your QR code full-size.
+ * The terminal. Items fill the screen, the ticket lives on the right and stays
+ * put through payment — the customer's order never leaves view.
  */
 export default function AdminPOS() {
   const { user } = useAuth();
   const isAdmin = user?.email === ADMIN_EMAIL;
 
+  // 'items' → 'payment' → 'processing' → 'done'
+  const [stage, setStage] = useState('items');
   const [lines, setLines] = useState([]);
   const [chosenVariant, setChosenVariant] = useState({});
   const [category, setCategory] = useState(null);
   const [search, setSearch] = useState('');
   const [customName, setCustomName] = useState('');
   const [customPrice, setCustomPrice] = useState('');
+  const [showCustom, setShowCustom] = useState(false);
 
-  const [charging, setCharging] = useState(false);
   const [method, setMethod] = useState('cash');
   const [tenderedText, setTenderedText] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const [done, setDone] = useState(null);
 
   const [showEOD, setShowEOD] = useState(false);
@@ -323,19 +309,12 @@ export default function AdminPOS() {
     return [...map.values()];
   }, [menu]);
 
-  const visible = useMemo(
-    () =>
-      categories
-        .filter((g) => !category || g.name === category)
-        .map((g) => ({
-          ...g,
-          items: g.items.filter(
-            (i) => i.is_available && (!search || i.name.toLowerCase().includes(search.toLowerCase()))
-          ),
-        }))
-        .filter((g) => g.items.length > 0),
-    [categories, category, search]
-  );
+  const shownItems = useMemo(() => {
+    const pool = category ? categories.find((c) => c.name === category)?.items || [] : menu;
+    return pool.filter(
+      (i) => i.is_available && (!search || i.name.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [menu, categories, category, search]);
 
   const subtotal = round2(lines.reduce((s, l) => s + l.price * l.quantity, 0));
   const tax = round2(subtotal * TAX_RATE);
@@ -344,15 +323,10 @@ export default function AdminPOS() {
 
   const tendered = tenderedText === '' ? null : Number(tenderedText);
   const change = tendered == null ? null : round2(tendered - total);
-  const canCharge =
-    lines.length > 0 && !isSaving && (method !== 'cash' || (change != null && change >= 0));
+  const canTake = lines.length > 0 && (method !== 'cash' || (change != null && change >= 0));
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const activeQR = useMemo(() => readQR(method), [method, qrVersion]);
-
-  useEffect(() => {
-    if (!charging) setTenderedText('');
-  }, [charging]);
 
   const currentVariant = (item) => {
     const opts = variantsFor(item);
@@ -381,6 +355,13 @@ export default function AdminPOS() {
       ];
     });
 
+  const bump = (idx, delta) =>
+    setLines((prev) =>
+      prev
+        .map((l, i) => (i === idx ? { ...l, quantity: l.quantity + delta } : l))
+        .filter((l) => l.quantity > 0)
+    );
+
   const addCustom = () => {
     const price = parseFloat(customPrice);
     if (!customName.trim() || Number.isNaN(price)) return;
@@ -396,10 +377,11 @@ export default function AdminPOS() {
     ]);
     setCustomName('');
     setCustomPrice('');
+    setShowCustom(false);
   };
 
-  const charge = async () => {
-    setIsSaving(true);
+  const takePayment = async () => {
+    setStage('processing');
     try {
       const now = new Date();
       const order = await createPhoneOrder({
@@ -424,159 +406,122 @@ export default function AdminPOS() {
         change: method === 'cash' ? change ?? 0 : 0,
         method,
       });
+      setStage('done');
     } catch (err) {
       toast.error(err.message || 'Sale not recorded');
-    } finally {
-      setIsSaving(false);
+      setStage('payment');
     }
   };
 
   const newSale = () => {
     setLines([]);
-    setCharging(false);
+    setStage('items');
     setTenderedText('');
     setMethod('cash');
     setDone(null);
+    setSearch('');
   };
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <p className="text-xl text-gray-700">Admin access only.</p>
       </div>
     );
   }
 
-  if (done) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="text-center max-w-sm w-full">
-          <div className="text-7xl mb-4">✅</div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Paid via {done.method}</h1>
-          <p className="text-gray-500 mb-6">Sale #{done.orderNumber}</p>
-          {done.method === 'cash' && done.change > 0 && (
-            <div className="bg-orange-50 rounded-2xl p-6 mb-6">
-              <p className="text-sm font-semibold text-orange-700">CHANGE DUE</p>
-              <p className="text-5xl font-black text-orange-600 tabular-nums">
-                ${done.change.toFixed(2)}
-              </p>
-            </div>
-          )}
-          <Button
-            onClick={newSale}
-            className="w-full h-14 text-lg bg-amber-500 hover:bg-amber-600 text-white"
-          >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            New sale
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen lg:h-screen flex flex-col lg:flex-row">
-      {/* ---- Food side ---- */}
-      <div className="flex-1 min-w-0 flex flex-col lg:overflow-hidden">
-        <div className="p-4 pb-2 space-y-2">
-          <div className="flex items-center gap-2">
-            <Banknote className="w-6 h-6 text-amber-600" />
-            <h1 className="text-2xl font-bold text-gray-900 flex-1">Register</h1>
-            <button
-              onClick={() => setShowEOD(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-700 hover:border-amber-400"
-            >
-              <BarChart3 className="w-4 h-4 text-amber-600" />
-              End of day
-            </button>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:border-amber-400"
-              aria-label="Register settings"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          </div>
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search dishes…"
-          />
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setCategory(null)}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap',
-                !category ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700'
-              )}
-            >
-              All
-            </button>
-            {categories.map((g) => (
-              <button
-                key={g.name}
-                onClick={() => setCategory(g.name)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap',
-                  category === g.name ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700'
-                )}
-              >
-                {g.icon} {g.name}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="h-full flex gap-4 p-4 overflow-hidden">
+      {/* ─────────── Items / payment ─────────── */}
+      <section className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        {stage === 'items' && (
+          <>
+            <header className="flex-none">
+              <p className="text-sm font-semibold text-amber-600 mb-1">Items</p>
+              <div className="flex items-center gap-3 mb-4">
+                <h1 className="text-3xl font-bold text-ink-900">
+                  {category || 'All items'}
+                </h1>
+                <div className="flex-1" />
+                <div className="relative w-full max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search"
+                    className="pl-9 h-11 rounded-xl bg-white border-gray-200"
+                    data-testid="pos-search"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-ink-500 hover:border-amber-400 flex-none"
+                  aria-label="Register settings"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowEOD(true)}
+                  className="w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-ink-500 hover:border-amber-400 flex-none"
+                  aria-label="End of day"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                </button>
+              </div>
 
-        <div className="flex-1 lg:overflow-y-auto p-4 pt-2 space-y-5">
-          {visible.map((group) => (
-            <div key={group.name}>
-              <p className="text-xs font-semibold text-gray-500 mb-2">
-                {group.icon} {group.name}
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
-                {group.items.map((item) => {
+              <div className="flex gap-2 overflow-x-auto pb-3">
+                <button
+                  onClick={() => setCategory(null)}
+                  className={cn(
+                    'px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors',
+                    !category ? 'bg-ink-900 text-white' : 'bg-white text-ink-600 hover:bg-ink-50'
+                  )}
+                >
+                  All
+                </button>
+                {categories.map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => setCategory(c.name)}
+                    className={cn(
+                      'px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors',
+                      category === c.name
+                        ? 'bg-ink-900 text-white'
+                        : 'bg-white text-ink-600 hover:bg-ink-50'
+                    )}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                {shownItems.map((item) => {
                   const opts = variantsFor(item);
                   const variant = currentVariant(item);
                   const qty = qtyOf(item, variant.key);
                   return (
-                    <button
+                    <div
                       key={item.id}
-                      onClick={() => addOne(item, variant)}
                       className={cn(
-                        'relative text-left rounded-xl border p-3 min-h-[92px] transition-all bg-white hover:border-amber-400 hover:shadow-md',
-                        qty > 0
-                          ? 'border-amber-400 ring-1 ring-amber-300 shadow-md'
-                          : 'border-gray-200'
+                        'bg-white rounded-2xl p-3 flex flex-col transition-shadow',
+                        qty > 0 ? 'ring-2 ring-amber-400 shadow-md' : 'hover:shadow-md'
                       )}
                     >
-                      {qty > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
-                          {qty}
-                        </span>
-                      )}
-                      <div className="text-sm font-semibold text-gray-900 leading-tight mb-1">
+                      <DishThumb name={item.name} />
+                      <p className="mt-3 text-sm font-medium text-ink-900 leading-snug line-clamp-2">
                         {item.name}
-                      </div>
-                      <div
-                        className={cn(
-                          'text-base font-bold tabular-nums',
-                          variant.isTray ? 'text-purple-600' : 'text-amber-600'
-                        )}
-                      >
-                        ${variant.price.toFixed(2)}
-                      </div>
+                      </p>
                       {opts.length > 1 && (
-                        <div
-                          className="flex gap-1 mt-1.5 flex-wrap"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <div className="flex gap-1 flex-wrap mt-1.5">
                           {opts.map((o) => (
-                            <span
+                            <button
                               key={o.key}
-                              role="button"
                               onClick={() => setChosenVariant((p) => ({ ...p, [item.id]: o.key }))}
                               className={cn(
-                                'px-1.5 py-0.5 rounded-full text-[10px] cursor-pointer',
+                                'px-1.5 py-0.5 rounded-full text-[10px] font-medium',
                                 o.key === variant.key
                                   ? o.isTray
                                     ? 'bg-purple-600 text-white'
@@ -585,153 +530,95 @@ export default function AdminPOS() {
                               )}
                             >
                               {o.chip}
-                            </span>
+                            </button>
                           ))}
                         </div>
                       )}
-                    </button>
+                      <div className="mt-auto pt-3 flex items-center justify-between">
+                        <span
+                          className={cn(
+                            'font-bold tabular-nums',
+                            variant.isTray ? 'text-purple-600' : 'text-ink-900'
+                          )}
+                        >
+                          ${variant.price.toFixed(2)}
+                        </span>
+                        <button
+                          onClick={() => addOne(item, variant)}
+                          aria-label={`Add ${item.name}`}
+                          data-testid={`pos-add-${item.id}`}
+                          className="w-9 h-9 rounded-full bg-ink-900 text-white flex items-center justify-center hover:bg-ink-700 relative"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {qty > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                              {qty}
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </>
+        )}
 
-      {/* ---- Money side ---- */}
-      <div className="lg:w-[380px] bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col lg:h-screen">
-        <div className="flex-1 lg:overflow-y-auto p-4 space-y-1">
-          <p className="text-xs font-semibold text-gray-500 mb-2">TICKET</p>
-          {lines.length === 0 && (
-            <p className="text-sm text-gray-400 py-6 text-center">Tap dishes to ring them up.</p>
-          )}
-          {lines.map((l, idx) => (
-            <div key={`${l.itemId}-${l.variantKey}`} className="flex items-center gap-2 py-1">
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-gray-900 truncate">{l.name}</div>
-                <div className="text-xs text-gray-500 tabular-nums">${l.price.toFixed(2)} ea</div>
-              </div>
-              <button
-                onClick={() =>
-                  setLines((prev) =>
-                    prev
-                      .map((x, i) => (i === idx ? { ...x, quantity: x.quantity - 1 } : x))
-                      .filter((x) => x.quantity > 0)
-                  )
-                }
-                className="text-amber-600"
-                aria-label="Fewer"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="w-6 text-center text-sm font-bold tabular-nums">{l.quantity}</span>
-              <button
-                onClick={() =>
-                  setLines((prev) =>
-                    prev.map((x, i) => (i === idx ? { ...x, quantity: x.quantity + 1 } : x))
-                  )
-                }
-                className="text-amber-600"
-                aria-label="More"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-              <span className="w-14 text-right text-sm tabular-nums">
-                ${round2(l.price * l.quantity).toFixed(2)}
-              </span>
-              <button
-                onClick={() => setLines((prev) => prev.filter((_, i) => i !== idx))}
-                className="text-gray-300 hover:text-red-500"
-                aria-label="Remove"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        {stage === 'payment' && (
+          <div className="flex-1 overflow-y-auto">
+            <button
+              onClick={() => setStage('items')}
+              className="flex items-center gap-2 text-ink-600 mb-6 hover:text-ink-900"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back</span>
+            </button>
+
+            <h1 className="text-3xl font-bold text-ink-900 mb-1">Payment Methods</h1>
+            <p className="text-ink-500 mb-6">Choose payment method</p>
+
+            <div className="grid grid-cols-3 gap-4 max-w-2xl">
+              {METHODS.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    setMethod(m.id);
+                    setTenderedText('');
+                  }}
+                  data-testid={`pos-method-${m.id}`}
+                  className={cn(
+                    'rounded-2xl p-5 text-left transition-all border-2',
+                    method === m.id
+                      ? 'bg-ink-900 text-white border-ink-900'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  )}
+                >
+                  <div className="text-2xl mb-2">{m.glyph}</div>
+                  <div className="font-semibold">{m.label}</div>
+                </button>
+              ))}
             </div>
-          ))}
 
-          <div className="pt-3">
-            <p className="text-xs font-semibold text-gray-500 mb-1">CUSTOM AMOUNT</p>
-            <div className="flex gap-1.5">
-              <Input
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder="Name"
-                className="flex-1 h-9"
-              />
-              <Input
-                value={customPrice}
-                onChange={(e) => setCustomPrice(e.target.value)}
-                type="number"
-                step="0.01"
-                placeholder="$"
-                className="w-20 h-9"
-                onKeyDown={(e) => e.key === 'Enter' && addCustom()}
-              />
-              <Button
-                onClick={addCustom}
-                disabled={!customName.trim() || Number.isNaN(parseFloat(customPrice))}
-                className="h-9 bg-amber-500 hover:bg-amber-600 text-white px-3"
-              >
-                +
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Charge zone */}
-        <div className="border-t border-gray-200 p-4 space-y-3">
-          <div className="flex justify-between items-baseline">
-            <span className="text-sm text-gray-500">
-              {itemCount} item{itemCount === 1 ? '' : 's'}
-            </span>
-            <span className="text-3xl font-black text-gray-900 tabular-nums">
-              ${total.toFixed(2)}
-            </span>
-          </div>
-          {tax > 0 && (
-            <p className="text-xs text-gray-500 text-right tabular-nums">
-              includes ${tax.toFixed(2)} tax
-            </p>
-          )}
-
-          {charging ? (
-            <>
-              <div className="grid grid-cols-3 gap-2">
-                {METHODS.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => {
-                      setMethod(m.id);
-                      setTenderedText('');
-                    }}
-                    className={cn(
-                      'py-2 rounded-lg text-sm font-medium border',
-                      method === m.id
-                        ? 'bg-amber-500 text-white border-amber-500'
-                        : 'bg-white text-gray-700 border-gray-200'
-                    )}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-
+            <div className="mt-8 max-w-2xl">
               {method === 'cash' ? (
                 <>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">CASH RECEIVED</p>
                   <Input
                     type="number"
                     inputMode="decimal"
                     step="0.01"
                     value={tenderedText}
                     onChange={(e) => setTenderedText(e.target.value)}
-                    placeholder="Cash received"
-                    className="text-xl font-bold h-12"
+                    placeholder="0.00"
+                    className="text-2xl font-bold h-14 rounded-xl bg-white"
+                    data-testid="pos-tendered"
                     autoFocus
                   />
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap mt-3">
                     <button
                       onClick={() => setTenderedText(total.toFixed(2))}
-                      className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm"
+                      className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium"
                     >
                       Exact
                     </button>
@@ -739,7 +626,7 @@ export default function AdminPOS() {
                       <button
                         key={v}
                         onClick={() => setTenderedText(v.toFixed(2))}
-                        className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm"
+                        className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium"
                       >
                         ${v}
                       </button>
@@ -748,65 +635,213 @@ export default function AdminPOS() {
                   {change != null && (
                     <div
                       className={cn(
-                        'p-2.5 rounded-lg flex justify-between font-bold text-sm',
+                        'mt-4 p-4 rounded-xl flex justify-between font-bold',
                         change >= 0 ? 'bg-orange-50 text-orange-700' : 'bg-red-50 text-red-600'
                       )}
                     >
-                      <span>{change >= 0 ? 'Change' : 'Short by'}</span>
-                      <span className="tabular-nums">${Math.abs(change).toFixed(2)}</span>
+                      <span>{change >= 0 ? 'Change to give' : 'Short by'}</span>
+                      <span className="text-xl tabular-nums">${Math.abs(change).toFixed(2)}</span>
                     </div>
                   )}
                 </>
               ) : activeQR ? (
                 <div className="text-center">
-                  <p className="text-xs font-semibold text-gray-500 mb-1">
+                  <p className="text-xs font-semibold text-gray-500 mb-3">
                     CUSTOMER SCANS TO PAY ${total.toFixed(2)}
                   </p>
                   <img
                     src={activeQR}
                     alt={`${method} QR code`}
-                    className="w-56 max-w-full mx-auto rounded-xl border border-gray-200"
+                    className="w-64 mx-auto rounded-2xl border border-gray-200 bg-white p-2"
                   />
                 </div>
               ) : (
                 <button
                   onClick={() => setShowSettings(true)}
-                  className="w-full p-4 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 text-sm"
+                  className="w-full p-6 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400"
                 >
-                  <QrCode className="w-6 h-6 mx-auto mb-1" />
-                  No {method} QR on this device — tap to add it in settings
+                  <QrCode className="w-8 h-8 mx-auto mb-2" />
+                  No {method} QR on this device — tap to add it
                 </button>
               )}
+            </div>
+          </div>
+        )}
 
-              <Button
-                onClick={charge}
-                disabled={!canCharge}
-                className="w-full h-14 text-lg bg-green-600 hover:bg-green-700 text-white"
-              >
-                {isSaving
-                  ? 'Recording…'
-                  : method === 'cash'
-                    ? `Charge $${total.toFixed(2)} · cash`
-                    : `They paid $${total.toFixed(2)} · ${method}`}
-              </Button>
-              <button
-                onClick={() => setCharging(false)}
-                className="w-full text-xs text-gray-400 hover:text-gray-600"
-              >
-                Back to ticket
-              </button>
-            </>
-          ) : (
+        {stage === 'processing' && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-5">
+            <div className="w-16 h-16 rounded-full border-4 border-amber-200 border-t-amber-500 animate-spin" />
+            <p className="text-xl font-bold text-ink-900">Recording payment…</p>
+          </div>
+        )}
+
+        {stage === 'done' && done && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
+            <div className="text-6xl">✅</div>
+            <h1 className="text-3xl font-bold text-ink-900">Paid via {done.method}</h1>
+            <p className="text-ink-500">Sale #{done.orderNumber}</p>
+            {done.method === 'cash' && done.change > 0 && (
+              <div className="bg-orange-50 rounded-2xl px-10 py-6">
+                <p className="text-sm font-semibold text-orange-700">CHANGE DUE</p>
+                <p className="text-5xl font-black text-orange-600 tabular-nums">
+                  ${done.change.toFixed(2)}
+                </p>
+              </div>
+            )}
             <Button
-              onClick={() => setCharging(true)}
-              disabled={lines.length === 0}
-              className="w-full h-14 text-lg bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={newSale}
+              data-testid="pos-new-sale"
+              className="h-14 px-10 text-lg rounded-2xl bg-ink-900 hover:bg-ink-700 text-white mt-2"
             >
-              Charge ${total.toFixed(2)}
+              <RotateCcw className="w-5 h-5 mr-2" />
+              New sale
             </Button>
+          </div>
+        )}
+      </section>
+
+      {/* ─────────── Current Order ─────────── */}
+      <aside className="w-[340px] flex-none bg-white rounded-2xl flex flex-col overflow-hidden">
+        <div className="p-5 pb-3 flex-none">
+          <h2 className="text-xl font-bold text-ink-900 mb-3">Current Order</h2>
+          <div className="flex items-center gap-2 text-sm text-ink-600">
+            <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center">
+              <User className="w-4 h-4 text-amber-700" />
+            </div>
+            Walk-in
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 space-y-3" data-testid="pos-ticket">
+          {lines.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-10">
+              Tap items to start an order.
+            </p>
+          )}
+          {lines.map((l, idx) => (
+            <div key={`${l.itemId}-${l.variantKey}`} className="flex items-center gap-3">
+              <DishThumb name={l.name} size="sm" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-ink-900 truncate">{l.name}</p>
+                <p className="text-sm font-bold text-ink-900 tabular-nums">
+                  ${round2(l.price * l.quantity).toFixed(2)}
+                </p>
+              </div>
+              {stage === 'items' ? (
+                <div className="flex items-center gap-2 flex-none">
+                  <button
+                    onClick={() => bump(idx, -1)}
+                    className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-ink-600"
+                    aria-label={`One fewer ${l.name}`}
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="w-4 text-center text-sm font-semibold tabular-nums">
+                    {l.quantity}
+                  </span>
+                  <button
+                    onClick={() => bump(idx, 1)}
+                    className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-ink-600"
+                    aria-label={`One more ${l.name}`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <span className="text-sm text-ink-500 flex-none">x{l.quantity}</span>
+              )}
+            </div>
+          ))}
+
+          {stage === 'items' && (
+            <div className="pt-2">
+              {showCustom ? (
+                <div className="flex gap-1.5">
+                  <Input
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Name"
+                    className="flex-1 h-9"
+                    autoFocus
+                  />
+                  <Input
+                    value={customPrice}
+                    onChange={(e) => setCustomPrice(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    placeholder="$"
+                    className="w-20 h-9"
+                    onKeyDown={(e) => e.key === 'Enter' && addCustom()}
+                  />
+                  <Button
+                    onClick={addCustom}
+                    className="h-9 px-3 bg-ink-900 hover:bg-ink-700 text-white"
+                  >
+                    Add
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCustom(true)}
+                  className="text-xs text-amber-600 font-medium hover:underline"
+                >
+                  + Custom amount
+                </button>
+              )}
+            </div>
           )}
         </div>
-      </div>
+
+        <div className="p-5 pt-3 flex-none">
+          <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+            <div className="flex justify-between text-ink-500">
+              <span>Subtotal</span>
+              <span className="tabular-nums" data-testid="pos-subtotal">
+                ${subtotal.toFixed(2)}
+              </span>
+            </div>
+            {tax > 0 && (
+              <div className="flex justify-between text-ink-500">
+                <span>Tax</span>
+                <span className="tabular-nums">${tax.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between pt-2 border-t border-gray-200 font-bold text-ink-900">
+              <span>Total</span>
+              <span className="text-lg tabular-nums" data-testid="pos-total">
+                ${total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {stage === 'items' && (
+            <Button
+              onClick={() => setStage('payment')}
+              disabled={lines.length === 0}
+              data-testid="pos-continue"
+              className="w-full h-13 py-4 mt-4 rounded-xl bg-ink-900 hover:bg-ink-700 text-white text-base font-semibold"
+            >
+              Continue
+            </Button>
+          )}
+          {stage === 'payment' && (
+            <Button
+              onClick={takePayment}
+              disabled={!canTake}
+              data-testid="pos-take-payment"
+              className="w-full h-13 py-4 mt-4 rounded-xl bg-green-600 hover:bg-green-700 text-white text-base font-semibold"
+            >
+              <Banknote className="w-5 h-5 mr-2" />
+              {method === 'cash' ? `Take $${total.toFixed(2)}` : `They paid $${total.toFixed(2)}`}
+            </Button>
+          )}
+          {itemCount > 0 && stage === 'items' && (
+            <p className="text-center text-xs text-gray-400 mt-2">
+              {itemCount} item{itemCount === 1 ? '' : 's'}
+            </p>
+          )}
+        </div>
+      </aside>
 
       <EndOfDayDialog isOpen={showEOD} onClose={() => setShowEOD(false)} />
       <SettingsDialog

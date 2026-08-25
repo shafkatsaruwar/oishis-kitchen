@@ -160,7 +160,7 @@ function LayoutContent({ children, currentPageName }) {
                       </DropdownMenuItem>
                       {isAdmin && (
                         <DropdownMenuItem asChild className="font-dm text-ink-700 hover:text-ink-900 rounded-none">
-                          <Link to={createPageUrl('AdminOrders')} className="cursor-pointer">
+                          <Link to={createPageUrl('AdminPOS')} className="cursor-pointer">
                             Admin
                           </Link>
                         </DropdownMenuItem>

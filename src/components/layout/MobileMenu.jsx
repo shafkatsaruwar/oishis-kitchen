@@ -74,7 +74,7 @@ export default function MobileMenu({ user, isAdmin, onLogout, transparent = fals
                       </Link>
                       {isAdmin && (
                         <Link
-                          to={createPageUrl('AdminOrders')}
+                          to={createPageUrl('AdminPOS')}
                           onClick={() => setIsOpen(false)}
                           className="flex items-center gap-3 text-ink-700 hover:text-ink-900 hover:bg-ink-50 transition-colors py-3 px-3 border-b border-ink-100 rounded-sm"
                         >
