@@ -103,6 +103,70 @@ function DishThumb({ name, size = 'lg' }) {
   );
 }
 
+/**
+ * Sizes live here rather than as chips on the tile. Packed chips put four
+ * targets inside a card's width, which is how you ring up a kebab when you
+ * meant a polao; a full-width row is impossible to mis-hit. Stays open so a
+ * mela run of eight chicken biryani is eight taps, not eight reopens.
+ */
+function VariantPicker({ item, lines, onAdd, onClose }) {
+  if (!item) return null;
+  const opts = variantsFor(item);
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="bg-white max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-ink-900 leading-tight">
+            {item.name}
+          </DialogTitle>
+        </DialogHeader>
+        <p className="-mt-2 text-sm text-ink-500">Tap a size. Tap again to add another.</p>
+        <div className="space-y-2 max-h-[55vh] overflow-y-auto py-1">
+          {opts.map((o) => {
+            const q =
+              lines.find((l) => l.itemId === item.id && l.variantKey === o.key)?.quantity || 0;
+            return (
+              <button
+                key={o.key}
+                onClick={() => onAdd(item, o)}
+                data-testid={`pos-variant-${o.key}`}
+                className={cn(
+                  'w-full min-h-[64px] px-4 py-3 rounded-xl border-2 flex items-center gap-3 text-left transition-colors',
+                  q > 0
+                    ? 'border-amber-400 bg-amber-50'
+                    : 'border-gray-200 bg-white hover:border-amber-300'
+                )}
+              >
+                <span className="flex-1 font-semibold text-ink-900 leading-snug">
+                  {o.chip || item.name}
+                </span>
+                <span
+                  className={cn(
+                    'text-lg font-bold tabular-nums',
+                    o.isTray ? 'text-purple-600' : 'text-ink-900'
+                  )}
+                >
+                  ${o.price.toFixed(2)}
+                </span>
+                <span className="w-9 h-9 rounded-full bg-ink-900 text-white flex items-center justify-center flex-none">
+                  {q > 0 ? <span className="text-sm font-bold">{q}</span> : <Plus className="w-4 h-4" />}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <Button
+          onClick={onClose}
+          data-testid="pos-variant-done"
+          className="w-full h-12 rounded-xl bg-ink-900 hover:bg-ink-700 text-white text-base font-semibold"
+        >
+          Done
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** Today's takings, split the way you'd count the drawer. */
 function EndOfDayDialog({ isOpen, onClose }) {
   const { data, isLoading } = useQuery({
@@ -282,7 +346,7 @@ export default function AdminPOS() {
   // 'items' → 'payment' → 'processing' → 'done'
   const [stage, setStage] = useState('items');
   const [lines, setLines] = useState([]);
-  const [chosenVariant, setChosenVariant] = useState({});
+  const [pickerItem, setPickerItem] = useState(null);
   const [category, setCategory] = useState(null);
   const [search, setSearch] = useState('');
   const [customName, setCustomName] = useState('');
@@ -368,13 +432,6 @@ export default function AdminPOS() {
       }
       return next;
     });
-
-  const currentVariant = (item) => {
-    const opts = variantsFor(item);
-    return opts.find((o) => o.key === chosenVariant[item.id]) || opts[0];
-  };
-  const qtyOf = (item, key) =>
-    lines.find((l) => l.itemId === item.id && l.variantKey === key)?.quantity || 0;
 
   const addOne = (item, variant) =>
     setLines((prev) => {
@@ -464,7 +521,6 @@ export default function AdminPOS() {
       return;
     }
     setLines([]);
-    setChosenVariant({});
     setStage('items');
     setTenderedText('');
     setConfirmClear(false);
@@ -481,19 +537,38 @@ export default function AdminPOS() {
 
   const itemCard = (item) => {
     const opts = variantsFor(item);
-    const variant = currentVariant(item);
-    const qty = qtyOf(item, variant.key);
+    const multi = opts.length > 1;
+    // One number for the tile: how many of this dish are on the ticket, whatever size.
+    const qty = lines.reduce((n, l) => (l.itemId === item.id ? n + l.quantity : n), 0);
     const starred = favorites.has(item.id);
+    const low = Math.min(...opts.map((o) => o.price));
+    const ring = multi ? opts[0] : opts[0];
+    const open = () => (multi ? setPickerItem(item) : addOne(item, ring));
     return (
       <div
         key={item.id}
+        role="button"
+        tabIndex={0}
+        onClick={open}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            open();
+          }
+        }}
+        data-testid={`pos-add-${item.id}`}
+        aria-label={multi ? `${item.name}, ${opts.length} sizes` : `Add ${item.name}`}
         className={cn(
-          'relative bg-white rounded-2xl p-3 flex flex-col transition-shadow',
+          'relative bg-white rounded-2xl p-3 flex flex-col cursor-pointer transition-shadow',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
           qty > 0 ? 'ring-2 ring-amber-400 shadow-md' : 'hover:shadow-md'
         )}
       >
         <button
-          onClick={() => toggleFavorite(item.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(item.id);
+          }}
           aria-label={starred ? `Unfavourite ${item.name}` : `Favourite ${item.name}`}
           data-testid={`pos-fav-${item.id}`}
           className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm"
@@ -510,40 +585,23 @@ export default function AdminPOS() {
         <p className="mt-2.5 text-base font-semibold text-ink-900 leading-snug line-clamp-2">
           {item.name}
         </p>
-        {opts.length > 1 && (
-          <div className="flex gap-1 flex-wrap mt-2">
-            {opts.map((o) => (
-              <button
-                key={o.key}
-                onClick={() => setChosenVariant((p) => ({ ...p, [item.id]: o.key }))}
-                className={cn(
-                  'px-2 py-0.5 rounded-md text-xs font-medium leading-5',
-                  o.key === variant.key
-                    ? o.isTray
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-amber-500 text-white'
-                    : 'bg-gray-100 text-gray-600'
-                )}
-              >
-                {o.chip}
-              </button>
-            ))}
-          </div>
+        {multi && (
+          <p className="mt-1 text-xs font-medium text-ink-400">{opts.length} sizes</p>
         )}
         <div className="mt-auto pt-3 flex items-center justify-between">
           <span
             className={cn(
               'text-lg font-bold tabular-nums',
-              variant.isTray ? 'text-purple-600' : 'text-ink-900'
+              ring.isTray && !multi ? 'text-purple-600' : 'text-ink-900'
             )}
           >
-            ${variant.price.toFixed(2)}
+            {multi && <span className="text-xs font-semibold text-ink-400 mr-1">from</span>}
+            ${low.toFixed(2)}
           </span>
-          <button
-            onClick={() => addOne(item, variant)}
-            aria-label={`Add ${item.name}`}
-            data-testid={`pos-add-${item.id}`}
-            className="w-9 h-9 rounded-full bg-ink-900 text-white flex items-center justify-center hover:bg-ink-700 relative"
+          {/* Decoration, not a control — the whole tile is the target. */}
+          <span
+            aria-hidden="true"
+            className="w-9 h-9 rounded-full bg-ink-900 text-white flex items-center justify-center flex-none relative"
           >
             <Plus className="w-4 h-4" />
             {qty > 0 && (
@@ -551,7 +609,7 @@ export default function AdminPOS() {
                 {qty}
               </span>
             )}
-          </button>
+          </span>
         </div>
       </div>
     );
@@ -985,6 +1043,12 @@ export default function AdminPOS() {
         </div>
       </aside>
 
+      <VariantPicker
+        item={pickerItem}
+        lines={lines}
+        onAdd={addOne}
+        onClose={() => setPickerItem(null)}
+      />
       <EndOfDayDialog isOpen={showEOD} onClose={() => setShowEOD(false)} />
       <SettingsDialog
         isOpen={showSettings}
