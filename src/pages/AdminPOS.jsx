@@ -572,9 +572,8 @@ export default function AdminPOS() {
         {stage === 'items' && (
           <>
             <header className="flex-none">
-              <p className="text-sm font-semibold text-amber-600 mb-1">Items</p>
-              <div className="flex items-center gap-3 mb-4">
-                <h1 className="text-3xl font-bold text-ink-900">
+              <div className="flex items-center gap-3 mb-3">
+                <h1 className="text-2xl font-bold text-ink-900 truncate">
                   {category === 'favorites' ? 'Favourites' : category || 'All items'}
                 </h1>
                 <div className="flex-1" />
@@ -604,7 +603,9 @@ export default function AdminPOS() {
                 </button>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto pb-3">
+              {/* Wraps rather than scrolls: a half-sliced chip at the edge reads as
+                  a glitch, and a category you cannot see is one you will not use. */}
+              <div className="flex flex-wrap gap-2 pb-3">
                 <button
                   onClick={() => setCategory(null)}
                   className={cn(
@@ -654,10 +655,14 @@ export default function AdminPOS() {
             <div className="flex-1 overflow-y-auto pr-1">
               {starredItems.length > 0 && (
                 <>
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-2 tracking-wide">
-                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    FAVOURITES
-                  </p>
+                  {/* Only worth labelling when both groups are on screen at once —
+                      inside a filter the chip and the heading already said it. */}
+                  {!category && (
+                    <p className="flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-2 tracking-wide">
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      FAVOURITES
+                    </p>
+                  )}
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-5">
                     {starredItems.map(itemCard)}
                   </div>
@@ -665,7 +670,7 @@ export default function AdminPOS() {
               )}
               {otherItems.length > 0 && (
                 <>
-                  {starredItems.length > 0 && (
+                  {starredItems.length > 0 && !category && (
                     <p className="text-xs font-bold text-ink-400 mb-2 tracking-wide">
                       EVERYTHING ELSE
                     </p>
