@@ -2,6 +2,7 @@ import About from './pages/About';
 import AdminOrders from './pages/AdminOrders';
 import AdminMenu from './pages/AdminMenu';
 import AdminGrocery from './pages/AdminGrocery';
+import AdminTasks from './pages/AdminTasks';
 import AdminCalendar from './pages/AdminCalendar';
 import AdminReviews from './pages/AdminReviews';
 import AdminLabels from './pages/AdminLabels';
@@ -31,6 +32,7 @@ export const PAGES = {
     "AdminOrders": AdminOrders,
     "AdminMenu": AdminMenu,
     "AdminGrocery": AdminGrocery,
+    "AdminTasks": AdminTasks,
     "AdminCalendar": AdminCalendar,
     "AdminReviews": AdminReviews,
     "AdminLabels": AdminLabels,

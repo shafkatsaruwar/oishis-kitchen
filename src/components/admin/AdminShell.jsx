@@ -14,6 +14,7 @@ import {
   MessageSquare,
   ExternalLink,
   Power,
+  ListTodo,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,7 @@ const SECTIONS = [
   { page: 'AdminMenu', label: 'Menu', icon: UtensilsCrossed, badge: 'lowStock' },
   { page: 'AdminInventory', label: 'Inventory', icon: Boxes },
   { page: 'AdminGrocery', label: 'Grocery', icon: ShoppingCart },
+  { page: 'AdminTasks', label: 'To-Do', icon: ListTodo },
   { page: 'AdminLabels', label: 'Labels', icon: Tag },
   { page: 'AdminReviews', label: 'Reviews', icon: MessageSquare, badge: 'pendingReviews' },
 ];
