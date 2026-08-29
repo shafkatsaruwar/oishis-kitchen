@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, ADMIN_EMAIL } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
+import { lastKnown } from '@/lib/offline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -345,7 +346,13 @@ export default function AdminPOS() {
 
   // 'items' → 'payment' → 'processing' → 'done'
   const [stage, setStage] = useState('items');
-  const [lines, setLines] = useState([]);
+  // Seeded from the device: a refresh mid-order — or iOS reclaiming the tab
+  // while you take a phone call — must not drop a ticket the customer is
+  // still standing at the counter for.
+  const [lines, setLines] = useState(() => {
+    const saved = lastKnown.get('pos-open-ticket');
+    return Array.isArray(saved) ? saved : [];
+  });
   const [pickerItem, setPickerItem] = useState(null);
   const [category, setCategory] = useState(null);
   const [search, setSearch] = useState('');
@@ -362,6 +369,12 @@ export default function AdminPOS() {
   const [qrVersion, setQrVersion] = useState(0);
   const [favorites, setFavorites] = useState(readFavorites);
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // The ticket follows the device, not the tab.
+  useEffect(() => {
+    if (lines.length > 0) lastKnown.set('pos-open-ticket', lines);
+    else lastKnown.remove('pos-open-ticket');
+  }, [lines]);
 
   const { data: menu = [] } = useQuery({
     queryKey: ['admin-menu-items'],

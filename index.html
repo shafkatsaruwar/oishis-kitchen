@@ -7,6 +7,12 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1c1917" />
     <link rel="apple-touch-icon" href="/logo.png" />
+    <!-- iOS: honoured by Safari older than 15.4, which ignores the manifest's
+         display mode. Without it, Add to Home Screen opens in a browser tab
+         with the address bar eating register screen space. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Oishi's" />
     <title>Oishi's Kitchen | Authentic Bengali Catering in Malden, MA</title>
     <meta name="description" content="Authentic Bengali catering in Malden, Massachusetts. Homemade biryani, curries, and traditional dishes for weddings, events, and parties. Order online or book your event." />
     <meta name="keywords" content="Bengali catering, Bangladeshi food, biryani, Malden MA, Bengali food Massachusetts, halal catering, event catering, Oishi's Kitchen" />
