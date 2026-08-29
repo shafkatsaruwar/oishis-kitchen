@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import PickupScheduler from '../components/ordering/PickupScheduler';
 import { useAuth } from '@/lib/AuthContext';
 import emailjs from '@emailjs/browser';
+import { enqueueInsert, isNetworkError, isOnline } from '@/lib/offline';
+import { lastKnown } from '@/lib/offline/lastKnown';
 
 export default function Checkout() {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -108,8 +110,27 @@ export default function Checkout() {
         payment_status: formData.payment_method === 'pay_on_pickup' ? 'pending' : 'paid'
       };
 
-      const { error } = await supabase.from('orders').insert([orderData]);
-      if (error) throw error;
+      const placeOrder = async () => {
+        const { error } = await supabase.from('orders').insert([orderData]);
+        if (error) throw error;
+      };
+
+      try {
+        if (!isOnline()) throw new TypeError('Failed to fetch');
+        await placeOrder();
+      } catch (error) {
+        if (!isOnline() || isNetworkError(error)) {
+          enqueueInsert('orders', orderData, `Order ${orderNumber}`);
+          lastKnown.set(`order:${orderNumber}`, orderData);
+          clearCart();
+          navigate(createPageUrl('OrderConfirmation') + `?orderNumber=${orderNumber}&queued=1`);
+          toast.message('Order saved on this device. It will send when you are back online.');
+          return;
+        }
+        throw error;
+      }
+
+      lastKnown.set(`order:${orderNumber}`, orderData);
 
       // Send confirmation email (non-blocking)
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
@@ -153,7 +174,7 @@ export default function Checkout() {
     }
   };
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && !isSubmitting) {
     navigate(createPageUrl('OrderOnline'));
     return null;
   }

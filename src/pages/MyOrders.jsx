@@ -11,6 +11,7 @@ import { createPageUrl } from '../utils';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
 import { format } from 'date-fns';
 import { useAuth } from '@/lib/AuthContext';
+import { throwIfCannotWrite, writeErrorMessage } from '@/lib/offline';
 
 export default function MyOrders() {
   const queryClient = useQueryClient();
@@ -34,6 +35,7 @@ export default function MyOrders() {
 
   const cancelOrderMutation = useMutation({
     mutationFn: async (orderId) => {
+      throwIfCannotWrite('Cancelling this order');
       const { error } = await supabase
         .from('orders')
         .update({ status: 'cancelled' })
@@ -44,8 +46,8 @@ export default function MyOrders() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('Order cancelled successfully');
     },
-    onError: () => {
-      toast.error('Failed to cancel order');
+    onError: (e) => {
+      toast.error(writeErrorMessage(e, 'Failed to cancel order'));
     }
   });
 

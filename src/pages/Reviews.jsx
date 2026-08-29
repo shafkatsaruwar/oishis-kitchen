@@ -9,6 +9,7 @@ import { Star, User, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { enqueueInsert, isNetworkError, isOnline } from '@/lib/offline';
 
 const yelpReviews = [
   {
@@ -58,12 +59,26 @@ export default function Reviews() {
 
   const submitReviewMutation = useMutation({
     mutationFn: async (reviewData) => {
-      const { error } = await supabase.from('reviews').insert([reviewData]);
-      if (error) throw error;
+      try {
+        if (!isOnline()) throw new TypeError('Failed to fetch');
+        const { error } = await supabase.from('reviews').insert([reviewData]);
+        if (error) throw error;
+        return { queued: false };
+      } catch (error) {
+        if (!isOnline() || isNetworkError(error)) {
+          enqueueInsert('reviews', reviewData, 'Review');
+          return { queued: true };
+        }
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['approved-reviews'] });
-      toast.success('Thank you! Your review has been submitted for approval.');
+      toast.success(
+        result?.queued
+          ? 'Review saved on this device. It will send when you are back online.'
+          : 'Thank you! Your review has been submitted for approval.'
+      );
       setFormData({ name: '', email: '', review_text: '' });
       setRating(5);
     },

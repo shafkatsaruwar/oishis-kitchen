@@ -17,6 +17,7 @@ import {
 import StockControl from '../components/admin/StockControl';
 import { Flame, Pencil, Lock, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { writeErrorMessage } from '@/lib/offline';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 
@@ -71,7 +72,7 @@ export default function AdminMenu() {
       toast.success('Item saved!');
       setEditingItem(null);
     },
-    onError: () => toast.error('Failed to save item'),
+      onError: (e) => toast.error(writeErrorMessage(e, 'Failed to save item')),
   });
 
   const createMutation = useMutation({
@@ -120,7 +121,7 @@ export default function AdminMenu() {
       setIsCreating(false);
       setEditingItem(null);
     },
-    onError: (e) => toast.error(e.message || 'Failed to add item'),
+      onError: (e) => toast.error(writeErrorMessage(e, 'Failed to add item')),
   });
 
   const deleteMutation = useMutation({
@@ -134,7 +135,7 @@ export default function AdminMenu() {
       setEditingItem(null);
       setIsCreating(false);
     },
-    onError: (e) => toast.error(e.message || 'Failed to delete item'),
+      onError: (e) => toast.error(writeErrorMessage(e, 'Failed to delete item')),
   });
 
   const setStock = useMutation({
@@ -154,7 +155,7 @@ export default function AdminMenu() {
       if (!data || data.length === 0) throw new Error('Nothing was updated — please try again.');
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-menu-items'] }),
-    onError: (e) => toast.error(e.message || 'Could not update stock'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update stock')),
   });
 
   const toggleAvailability = useMutation({
@@ -166,7 +167,7 @@ export default function AdminMenu() {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-menu-items'] }),
-    onError: () => toast.error('Failed to update availability'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Failed to update availability')),
   });
 
   const grouped = items.reduce((acc, item) => {

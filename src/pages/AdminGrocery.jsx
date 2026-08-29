@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, Check, ShoppingCart, Store, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { writeErrorMessage } from '@/lib/offline';
 import { cn } from '@/lib/utils';
 
 const STORE_COLUMN_SQL = `alter table grocery_items add column if not exists store text;`;
@@ -86,7 +87,7 @@ export default function AdminGrocery() {
       setPrice('');
       invalidate();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update grocery list')),
   });
 
   const toggleItem = useMutation({
@@ -98,6 +99,7 @@ export default function AdminGrocery() {
       if (error) throw error;
     },
     onSuccess: invalidate,
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update grocery list')),
   });
 
   const saveItem = useMutation({
@@ -109,7 +111,7 @@ export default function AdminGrocery() {
       setEditingId(null);
       invalidate();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update grocery list')),
   });
 
   const removeItem = useMutation({
@@ -118,6 +120,7 @@ export default function AdminGrocery() {
       if (error) throw error;
     },
     onSuccess: invalidate,
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update grocery list')),
   });
 
   const clearChecked = useMutation({
@@ -126,7 +129,7 @@ export default function AdminGrocery() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update grocery list')),
   });
 
   const groups = useMemo(() => {

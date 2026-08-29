@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { enqueueInsert, isNetworkError, isOnline, throwIfCannotWrite } from '@/lib/offline';
 
 /**
  * Every write here asks PostgREST for the updated row back and throws when
@@ -10,6 +11,7 @@ import { supabase } from '@/lib/supabase';
  * because the write had never landed.
  */
 async function updateOrder(orderId, patch) {
+  throwIfCannotWrite('This order update');
   const { data, error } = await supabase
     .from('orders')
     .update(patch)
@@ -74,6 +76,7 @@ export const setOrderTaxExempt = (order, exempt) => {
 };
 
 export async function deleteOrder(orderId) {
+  throwIfCannotWrite('Deleting this order');
   const { error } = await supabase.from('orders').delete().eq('id', orderId);
   if (error) throw error;
 }
@@ -111,27 +114,42 @@ export async function createPhoneOrder({
   const tax = noTax ? 0 : round2(subtotal * TAX_RATE);
   const total = round2(subtotal + tax);
 
-  const { data, error } = await supabase
-    .from('orders')
-    .insert({
-      order_number: generateOrderNumber(),
-      customer_name: (customerName || 'Walk-in').trim(),
-      customer_email: (customerEmail || '').trim(),
-      customer_phone: (customerPhone || '').trim(),
-      items,
-      subtotal,
-      tax,
-      total,
-      pickup_date: pickupDate,
-      pickup_time: pickupTime,
-      special_requests: specialRequests?.trim() || null,
-      status,
-      payment_method: paidNow ? paymentMethod : 'pay_on_pickup',
-      payment_status: paidNow ? 'paid' : 'pending',
-    })
-    .select();
+  const row = {
+    order_number: generateOrderNumber(),
+    customer_name: (customerName || 'Walk-in').trim(),
+    customer_email: (customerEmail || '').trim(),
+    customer_phone: (customerPhone || '').trim(),
+    items,
+    subtotal,
+    tax,
+    total,
+    pickup_date: pickupDate,
+    pickup_time: pickupTime,
+    special_requests: specialRequests?.trim() || null,
+    status,
+    payment_method: paidNow ? paymentMethod : 'pay_on_pickup',
+    payment_status: paidNow ? 'paid' : 'pending',
+  };
 
-  if (error) throw error;
-  if (!data || data.length === 0) throw new Error('The order was not saved — please try again.');
-  return data[0];
+  const insert = async () => {
+    const { data, error } = await supabase.from('orders').insert(row).select();
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('The order was not saved — please try again.');
+    return data[0];
+  };
+
+  if (!isOnline()) {
+    enqueueInsert('orders', row, `Phone order ${row.order_number}`);
+    return { ...row, _queued: true };
+  }
+
+  try {
+    return await insert();
+  } catch (error) {
+    if (isNetworkError(error)) {
+      enqueueInsert('orders', row, `Phone order ${row.order_number}`);
+      return { ...row, _queued: true };
+    }
+    throw error;
+  }
 }

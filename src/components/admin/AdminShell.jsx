@@ -17,6 +17,7 @@ import {
   ListTodo,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import OfflineBanner from '@/components/OfflineBanner';
 
 // The register is the app. Everything else is a stop on the rail.
 const SECTIONS = [
@@ -136,7 +137,10 @@ export default function AdminShell({ currentPageName, children }) {
       {/* Scrolls here rather than on the document: the rail stays put while long
           pages (menu, orders, inventory) run past the fold. The register opts out
           with its own h-full/overflow-hidden root and never scrolls this. */}
-      <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        <OfflineBanner />
+        {children}
+      </main>
     </div>
   );
 }
