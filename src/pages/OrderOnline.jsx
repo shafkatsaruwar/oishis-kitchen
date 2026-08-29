@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -184,48 +185,37 @@ export default function OrderOnline() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [loadingMenu, setLoadingMenu] = useState(true);
-
-  useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('menu_items')
-          .select('*')
-          .eq('is_available', true)
-          .order('category_order')
-          .order('display_order');
-        if (error) throw error;
-        // Group rows by category, preserving order
-        const grouped = {};
-        const order = [];
-        data.forEach(row => {
-          if (!grouped[row.category]) {
-            grouped[row.category] = { category: row.category, icon: row.category_icon, items: [] };
-            order.push(row.category);
-          }
-          grouped[row.category].items.push({
-            name: row.name,
-            description: row.description,
-            price: row.price,
-            minQty: row.min_qty,
-            spice: row.spice_level,
-            options: row.options,
-            trayOptions: row.tray_options,
-          });
+  const { data: liveMenu, isLoading: loadingMenu, isError } = useQuery({
+    queryKey: ['menu-items-available'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('is_available', true)
+        .order('category_order')
+        .order('display_order');
+      if (error) throw error;
+      const grouped = {};
+      const order = [];
+      data.forEach(row => {
+        if (!grouped[row.category]) {
+          grouped[row.category] = { category: row.category, icon: row.category_icon, items: [] };
+          order.push(row.category);
+        }
+        grouped[row.category].items.push({
+          name: row.name,
+          description: row.description,
+          price: row.price,
+          minQty: row.min_qty,
+          spice: row.spice_level,
+          options: row.options,
+          trayOptions: row.tray_options,
         });
-        setMenuCategories(order.map(k => grouped[k]));
-      } catch (err) {
-        console.error('Menu fetch failed:', err);
-        // Fall back to hardcoded data so the page still works
-        setMenuCategories(_PLACEHOLDER);
-      } finally {
-        setLoadingMenu(false);
-      }
-    };
-    fetchMenu();
-  }, []);
+      });
+      return order.map(k => grouped[k]);
+    },
+  });
+  const menuCategories = liveMenu ?? (isError ? _PLACEHOLDER : []);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);

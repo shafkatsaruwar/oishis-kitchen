@@ -9,6 +9,8 @@ import { createPageUrl } from '../utils';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
+import { findCachedOrder } from '@/lib/offline/findOrder';
+import { queryClientInstance } from '@/lib/query-client';
 
 const COLORS = ['#06b6d4', '#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899'];
 
@@ -67,6 +69,7 @@ export default function OrderConfirmation() {
   const navigate = useNavigate();
   const [orderNumber, setOrderNumber] = useState('');
   const [order, setOrder] = useState(null);
+  const [queued, setQueued] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(true);
 
@@ -79,6 +82,7 @@ export default function OrderConfirmation() {
     const params = new URLSearchParams(window.location.search);
     const num = params.get('orderNumber') || '';
     setOrderNumber(num);
+    setQueued(params.get('queued') === '1');
     if (num) fetchOrder(num);
     else setLoading(false);
 
@@ -93,9 +97,9 @@ export default function OrderConfirmation() {
         .select('*')
         .eq('order_number', num)
         .single();
-      setOrder(data);
+      setOrder(data || findCachedOrder(num, queryClientInstance));
     } catch (e) {
-      // silently continue — order number still shows
+      setOrder(findCachedOrder(num, queryClientInstance));
     } finally {
       setLoading(false);
     }
@@ -145,7 +149,7 @@ export default function OrderConfirmation() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            Order Confirmed! 🎉
+            {queued || order?._queued ? 'Order saved on this device' : 'Order Confirmed! 🎉'}
           </motion.h1>
           <motion.p
             className="text-lg text-gray-600"
@@ -153,7 +157,9 @@ export default function OrderConfirmation() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.65 }}
           >
-            Thank you! A confirmation email is on its way.
+            {queued || order?._queued
+              ? 'You were offline. This order will send to the kitchen when you are back online. Confirmation email waits until then.'
+              : 'Thank you! A confirmation email is on its way.'}
           </motion.p>
         </motion.div>
 

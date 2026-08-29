@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, Check, EyeOff, Trash2, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { writeErrorMessage } from '@/lib/offline';
 import { cn } from '@/lib/utils';
 
 const FILTERS = [
@@ -56,7 +57,7 @@ export default function AdminReviews() {
       invalidate();
       toast.success(status === 'approved' ? 'Review published' : 'Review hidden');
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update review')),
   });
 
   const removeReview = useMutation({
@@ -68,7 +69,7 @@ export default function AdminReviews() {
       invalidate();
       toast.success('Review deleted');
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update review')),
   });
 
   if (!isAdmin) {

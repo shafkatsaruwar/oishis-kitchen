@@ -185,7 +185,11 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
         paymentMethod,
         noTax,
       });
-      toast.success(`Order #${order.order_number} created`);
+      toast.success(
+        order._queued
+          ? `Order #${order.order_number} saved on this device. It will send when you are back online.`
+          : `Order #${order.order_number} created`
+      );
       onCreated?.();
       reset();
       onClose();

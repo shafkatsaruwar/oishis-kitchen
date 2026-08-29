@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import StockControl from '@/components/admin/StockControl';
 import { Boxes, Plus, Minus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { writeErrorMessage } from '@/lib/offline';
 import { cn } from '@/lib/utils';
 
 const INGREDIENTS_SQL = `create table if not exists ingredients (
@@ -83,7 +84,7 @@ export default function AdminInventory() {
       if (!data || data.length === 0) throw new Error('Nothing was updated.');
     },
     onSuccess: () => invalidate('admin-menu-items'),
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update inventory')),
   });
 
   const addIngredient = useMutation({
@@ -100,7 +101,7 @@ export default function AdminInventory() {
       setQty('');
       invalidate('ingredients');
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update inventory')),
   });
 
   const bumpIngredient = useMutation({
@@ -114,7 +115,7 @@ export default function AdminInventory() {
       if (!data || data.length === 0) throw new Error('Nothing was updated.');
     },
     onSuccess: () => invalidate('ingredients'),
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update inventory')),
   });
 
   const deleteIngredient = useMutation({
@@ -123,7 +124,7 @@ export default function AdminInventory() {
       if (error) throw error;
     },
     onSuccess: () => invalidate('ingredients'),
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update inventory')),
   });
 
   if (!isAdmin) {

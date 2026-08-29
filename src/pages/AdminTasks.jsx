@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2, Check, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
+import { writeErrorMessage } from '@/lib/offline';
 import { cn } from '@/lib/utils';
 
 const TASKS_SQL = `-- see supabase/tasks.sql
@@ -93,7 +94,7 @@ export default function AdminTasks() {
       setDue('');
       invalidate();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not save task')),
   });
 
   const toggleTask = useMutation({
@@ -105,7 +106,7 @@ export default function AdminTasks() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not save task')),
   });
 
   const removeTask = useMutation({
@@ -114,7 +115,7 @@ export default function AdminTasks() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not save task')),
   });
 
   if (!isAdmin) {

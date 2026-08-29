@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { throwIfCannotWrite, writeErrorMessage } from '@/lib/offline';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function AdminOrders() {
@@ -61,6 +62,7 @@ export default function AdminOrders() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, newStatus }) => {
+      throwIfCannotWrite('Updating order status');
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })
@@ -71,8 +73,8 @@ export default function AdminOrders() {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Order status updated!');
     },
-    onError: () => {
-      toast.error('Failed to update order status');
+    onError: (e) => {
+      toast.error(writeErrorMessage(e, 'Failed to update order status'));
     }
   });
 
@@ -85,7 +87,7 @@ export default function AdminOrders() {
       setPayOrder(null);
       toast.success('Payment recorded');
     },
-    onError: (e) => toast.error(e.message || 'Payment not recorded'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Payment not recorded')),
   });
 
   const reverseMutation = useMutation({
@@ -94,7 +96,7 @@ export default function AdminOrders() {
       invalidateOrders();
       toast.success('Payment reversed');
     },
-    onError: (e) => toast.error(e.message || 'Could not reverse payment'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not reverse payment')),
   });
 
   const taxMutation = useMutation({
@@ -103,7 +105,7 @@ export default function AdminOrders() {
       invalidateOrders();
       toast.success(exempt ? 'Tax removed' : 'Tax reapplied');
     },
-    onError: (e) => toast.error(e.message || 'Could not change tax'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not change tax')),
   });
 
   const editMutation = useMutation({
@@ -113,13 +115,13 @@ export default function AdminOrders() {
       setEditOrder(null);
       toast.success('Order updated');
     },
-    onError: (e) => toast.error(e.message || 'Could not update order'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update order')),
   });
 
   const flagsMutation = useMutation({
     mutationFn: ({ orderId, isTest, isVip }) => setOrderFlags(orderId, { isTest, isVip }),
     onSuccess: invalidateOrders,
-    onError: (e) => toast.error(e.message || 'Could not update tags'),
+    onError: (e) => toast.error(writeErrorMessage(e, 'Could not update tags')),
   });
 
   const filteredOrders = orders?.filter(order => {

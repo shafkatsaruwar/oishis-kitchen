@@ -9,6 +9,9 @@ import { Search, Package, ChefHat, Star, CheckCircle, MapPin, Phone, Calendar, C
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { createPageUrl } from '../utils';
+import { findCachedOrder } from '@/lib/offline/findOrder';
+import { isNetworkError, isOnline } from '@/lib/offline';
+import { queryClientInstance } from '@/lib/query-client';
 
 const STATUS_STEPS = [
   { key: 'pending',   label: 'Order Received', icon: Package,    desc: 'We got your order!' },
@@ -68,13 +71,31 @@ export default function TrackOrder() {
         .eq('order_number', orderNum)
         .single();
       if (err || !data) {
-        setOrder(null);
-        setError('No order found with that number. Please check and try again.');
+        const cached = findCachedOrder(orderNum, queryClientInstance);
+        if (cached) {
+          setOrder(cached);
+        } else {
+          setOrder(null);
+          setError(
+            !isOnline() || isNetworkError(err)
+              ? 'You are offline and this order is not saved on this device.'
+              : 'No order found with that number. Please check and try again.'
+          );
+        }
       } else {
         setOrder(data);
       }
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (error) {
+      const cached = findCachedOrder(orderNum, queryClientInstance);
+      if (cached) {
+        setOrder(cached);
+      } else {
+        setError(
+          !isOnline() || isNetworkError(error)
+            ? 'You are offline and this order is not saved on this device.'
+            : 'Something went wrong. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
       setSearched(true);

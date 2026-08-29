@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { createPageUrl } from '../utils';
+import { isOnline } from '@/lib/offline';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -34,6 +35,10 @@ export default function Login() {
   const redirectTo = new URLSearchParams(window.location.search).get('redirect') || createPageUrl('Home');
 
   const handleGoogleSignIn = async () => {
+    if (!isOnline()) {
+      toast.error('You are offline. Sign-in needs a network connection.');
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -45,6 +50,10 @@ export default function Login() {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (!isOnline()) {
+      toast.error('You are offline. Sign-in needs a network connection.');
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -65,6 +74,10 @@ export default function Login() {
     e.preventDefault();
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters.');
+      return;
+    }
+    if (!isOnline()) {
+      toast.error('You are offline. Sign-up needs a network connection.');
       return;
     }
     setLoading(true);

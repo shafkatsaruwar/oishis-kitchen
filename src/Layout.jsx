@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import MobileMenu from './components/layout/MobileMenu';
 import AdminShell from './components/admin/AdminShell';
+import OfflineBanner from './components/OfflineBanner';
 
 const ADMIN_PAGES = [
   'AdminOrders',
@@ -196,6 +197,7 @@ function LayoutContent({ children, currentPageName }) {
       </nav>
 
       <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminTasks', 'AdminCalendar', 'AdminReviews', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px]' : ''}`}>
+        <OfflineBanner />
         {children}
       </div>
 

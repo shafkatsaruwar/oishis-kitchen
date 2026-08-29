@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle, ChevronLeft, Phone, Minus, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { enqueueInsert, isNetworkError, isOnline } from '@/lib/offline';
 import { cn } from '@/lib/utils';
 
 const EVENT_TYPES = [
@@ -87,7 +88,7 @@ export default function BookEvent() {
         ? `\n\nMenu interests: ${menuInterests.join(', ')}`
         : '';
 
-      const { error } = await supabase.from('event_requests').insert([{
+      const row = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -96,9 +97,21 @@ export default function BookEvent() {
         guest_count: String(formData.guest_count),
         budget: formData.budget,
         message: (formData.message || '') + interestNote,
-      }]);
+      };
 
-      if (error) throw error;
+      try {
+        if (!isOnline()) throw new TypeError('Failed to fetch');
+        const { error } = await supabase.from('event_requests').insert([row]);
+        if (error) throw error;
+      } catch (err) {
+        if (!isOnline() || isNetworkError(err)) {
+          enqueueInsert('event_requests', row, 'Event request');
+          setSubmitted(true);
+          toast.message('Request saved on this device. It will send when you are back online.');
+          return;
+        }
+        throw err;
+      }
       setSubmitted(true);
     } catch (err) {
       console.error(err);
