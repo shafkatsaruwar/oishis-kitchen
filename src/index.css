@@ -235,6 +235,13 @@ button:focus-visible {
   text-align: right;
   color: #8c8c8c;
 }
+.ok-label-order {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #4a4a4a;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 2pt;
+}
 .ok-label-pickup-cap { font-size: 9pt; }
 .ok-label-pickup-val { font-size: 11pt; font-variant-numeric: tabular-nums; }
 
@@ -289,6 +296,7 @@ button:focus-visible {
   .ok-label-bar,
   .ok-label,
   .ok-label-note,
+  .ok-label-order,
   .ok-label-pickup {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

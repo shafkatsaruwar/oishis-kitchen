@@ -32,7 +32,7 @@ function nameSize(name = '') {
 const cleanLabelName = (name = '') =>
   name.replace(/\s*\((?:full|half) tray\)\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
 
-export function Label({ name, note, date, time }) {
+export function Label({ name, note, date, time, orderNumber }) {
   const displayName = cleanLabelName(name);
   return (
     <div className="ok-label">
@@ -47,9 +47,12 @@ export function Label({ name, note, date, time }) {
           </div>
           {note && <div className="ok-label-note">{note}</div>}
         </div>
-        {(date || time) && (
+        {(date || time || orderNumber) && (
           <div className="ok-label-pickup">
-            <div className="ok-label-pickup-cap">Pickup</div>
+            {/* The order number first: it is what matches a container back to
+                an order when four of them are stacked on the same shelf. */}
+            {orderNumber && <div className="ok-label-order">#{orderNumber}</div>}
+            {(date || time) && <div className="ok-label-pickup-cap">Pickup</div>}
             {date && <div className="ok-label-pickup-val">{date}</div>}
             {time && <div className="ok-label-pickup-val">{time}</div>}
           </div>

@@ -21,6 +21,7 @@ export default function LabelPrintDialog({ order, isOpen, onClose }) {
           note: item.special_instructions || null,
           date: order?.pickup_date || null,
           time: order?.pickup_time || null,
+          orderNumber: order?.order_number || null,
         });
       }
     }
