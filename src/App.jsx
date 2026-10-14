@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import OfflineSync from '@/lib/offline/OfflineSync';
+import { Agentation } from 'agentation';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -59,6 +60,10 @@ function App() {
           <AppRoutes />
         </Router>
         <Toaster />
+        {/* Dev-only UI annotation overlay. import.meta.env.DEV, not
+            process.env.NODE_ENV — Vite does not define process in the browser,
+            and Rollup strips this branch from the production bundle. */}
+        {import.meta.env.DEV && <Agentation />}
       </QueryClientProvider>
     </AuthProvider>
   )
