@@ -7,14 +7,17 @@ import LabelSheet from './LabelSheet';
 export default function LabelPrintDialog({ order, isOpen, onClose }) {
   const items = order?.items || [];
 
+  // One per dish, not one per portion. Eight containers of biryani go out
+  // under one label in practice, so seeding from the order quantity meant
+  // dialling seven of them back down every time.
   const [counts, setCounts] = useState(() =>
-    Object.fromEntries(items.map((i) => [i.name, i.quantity || 1]))
+    Object.fromEntries(items.map((i) => [i.name, 1]))
   );
 
   const labels = useMemo(() => {
     const out = [];
     for (const item of items) {
-      const n = counts[item.name] ?? item.quantity ?? 1;
+      const n = counts[item.name] ?? 1;
       for (let i = 0; i < n; i++) {
         out.push({
           name: item.name,
@@ -45,7 +48,7 @@ export default function LabelPrintDialog({ order, isOpen, onClose }) {
             Print Labels — #{order.order_number}
           </DialogTitle>
           <p className="text-sm text-gray-600">
-            Defaults to order quantity. Prints on 4"×2" label sheets (Avery 5163 / 8163), 10 per page.
+            One label per dish. Prints on 4"×2" label sheets (Avery 5163 / 8163), 10 per page.
           </p>
         </DialogHeader>
 
@@ -53,7 +56,7 @@ export default function LabelPrintDialog({ order, isOpen, onClose }) {
           <h4 className="text-xs font-semibold text-gray-500 tracking-wide mb-2">DISHES</h4>
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-200">
             {items.map((item) => {
-              const value = counts[item.name] ?? item.quantity ?? 1;
+              const value = counts[item.name] ?? 1;
               return (
                 <div key={item.name} className="flex items-center gap-3 p-3">
                   <div className="flex-1">

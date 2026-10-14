@@ -116,7 +116,7 @@ export default function InvoiceDialog({ order, isOpen, onClose, onToggleTax, isT
   const isInvoice = order.payment_status !== 'paid';
   const phone = (order.customer_phone || '').replace(/\D/g, '');
 
-  const whatsappText = encodeURIComponent(
+  const messageText = encodeURIComponent(
     `Hi ${order.customer_name}! Your Oishi's Kitchen order #${order.order_number} ` +
       `comes to $${order.total.toFixed(2)}. Pickup ${order.pickup_date}` +
       `${order.pickup_time ? ` at ${order.pickup_time}` : ''}. ` +
@@ -157,13 +157,12 @@ export default function InvoiceDialog({ order, isOpen, onClose, onToggleTax, isT
             </Button>
             {phone && (
               <Button asChild className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                <a
-                  href={`https://wa.me/${phone}?text=${whatsappText}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                {/* sms:…?&body= — the ampersand before body is what makes iOS
+                    keep the text; Android tolerates it, so one href covers both.
+                    No target="_blank": a new tab would be left behind empty. */}
+                <a href={`sms:${phone}?&body=${messageText}`}>
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  WhatsApp
+                  Message
                 </a>
               </Button>
             )}
