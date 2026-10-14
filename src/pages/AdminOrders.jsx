@@ -12,6 +12,7 @@ import InvoiceDialog from '../components/admin/InvoiceDialog';
 import PhoneOrderDialog from '../components/admin/PhoneOrderDialog';
 import EditOrderDialog from '../components/admin/EditOrderDialog';
 import { recordPayment, reversePayment, setOrderFlags, setOrderTaxExempt, updateOrderItems } from '@/lib/orderMutations';
+import { isOnlineOrder } from '@/lib/orderSource';
 import { format } from 'date-fns';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
 import OrderAnalytics from '../components/admin/OrderAnalytics';
@@ -132,15 +133,19 @@ export default function AdminOrders() {
 
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesTestFilter = !hideTestOrders || order.is_test !== true;
-
-    return matchesSearch && matchesStatus && matchesTestFilter;
+    // Counter sales have their own screen — this is the queue, and a sale that
+    // is already finished has no business in it.
+    return isOnlineOrder(order) && matchesSearch && matchesStatus && matchesTestFilter;
   }) || [];
 
   const getStatusCounts = () => {
     const counts = { pending: 0, confirmed: 0, preparing: 0, ready: 0, completed: 0, cancelled: 0 };
-    orders?.forEach(order => {
-      counts[order.status] = (counts[order.status] || 0) + 1;
-    });
+    // Same population the list shows, or the chips would promise orders that
+    // are not in here any more.
+    orders?.filter((o) => isOnlineOrder(o) && (!hideTestOrders || o.is_test !== true))
+      .forEach(order => {
+        counts[order.status] = (counts[order.status] || 0) + 1;
+      });
     return counts;
   };
 

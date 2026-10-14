@@ -90,6 +90,7 @@ export default function Checkout() {
 
       const orderData = {
         order_number: orderNumber,
+        source: 'online',
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone,

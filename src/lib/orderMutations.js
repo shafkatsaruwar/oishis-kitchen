@@ -107,6 +107,9 @@ export async function createPhoneOrder({
   // 'confirmed' for phone orders; the register writes 'completed' — the sale is
   // done the moment it's rung up
   status = 'confirmed',
+  // A phone order joins the queue like a website order; the register passes
+  // 'pos' because a counter sale is already finished.
+  source = 'online',
 }) {
   const subtotal = round2(items.reduce((sum, i) => sum + i.price * i.quantity, 0));
   // Tax-exempt orders still store a tax of 0 rather than null, so every total
@@ -129,6 +132,7 @@ export async function createPhoneOrder({
     status,
     payment_method: paidNow ? paymentMethod : 'pay_on_pickup',
     payment_status: paidNow ? 'paid' : 'pending',
+    source,
   };
 
   const insert = async () => {

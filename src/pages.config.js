@@ -3,6 +3,7 @@ import AdminOrders from './pages/AdminOrders';
 import AdminMenu from './pages/AdminMenu';
 import AdminGrocery from './pages/AdminGrocery';
 import AdminTasks from './pages/AdminTasks';
+import AdminWalkIns from './pages/AdminWalkIns';
 import AdminCalendar from './pages/AdminCalendar';
 import AdminReviews from './pages/AdminReviews';
 import AdminLabels from './pages/AdminLabels';
@@ -33,6 +34,7 @@ export const PAGES = {
     "AdminMenu": AdminMenu,
     "AdminGrocery": AdminGrocery,
     "AdminTasks": AdminTasks,
+    "AdminWalkIns": AdminWalkIns,
     "AdminCalendar": AdminCalendar,
     "AdminReviews": AdminReviews,
     "AdminLabels": AdminLabels,

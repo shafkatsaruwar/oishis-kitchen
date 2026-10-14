@@ -21,6 +21,7 @@ const ADMIN_PAGES = [
   'AdminMenu',
   'AdminGrocery',
   'AdminTasks',
+  'AdminWalkIns',
   'AdminCalendar',
   'AdminReviews',
   'AdminLabels',
@@ -196,13 +197,13 @@ function LayoutContent({ children, currentPageName }) {
         </div>
       </nav>
 
-      <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminTasks', 'AdminCalendar', 'AdminReviews', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px]' : ''}`}>
+      <div className={`${isHome ? '' : 'pt-[65px]'} ${!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminTasks', 'AdminWalkIns', 'AdminCalendar', 'AdminReviews', 'MyOrders', 'Login'].includes(currentPageName) ? 'pb-[72px]' : ''}`}>
         <OfflineBanner />
         {children}
       </div>
 
       {/* Sticky mobile order bar — hidden on cart/checkout pages */}
-      {!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminTasks', 'AdminCalendar', 'AdminReviews', 'MyOrders', 'Login'].includes(currentPageName) && (
+      {!['Cart', 'Checkout', 'AdminOrders', 'AdminMenu', 'AdminGrocery', 'AdminTasks', 'AdminWalkIns', 'AdminCalendar', 'AdminReviews', 'MyOrders', 'Login'].includes(currentPageName) && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-ink-100 px-4 py-3 flex gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <Link to={createPageUrl('OrderOnline')} className="flex-1">
             <Button className="w-full bg-ink-900 hover:bg-ink-700 text-white font-dm font-medium text-sm rounded-none h-11 tracking-wide">

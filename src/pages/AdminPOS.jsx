@@ -483,6 +483,7 @@ export default function AdminPOS() {
     try {
       const now = new Date();
       const order = await createPhoneOrder({
+      source: 'pos',
         customerName: 'Walk-in',
         customerPhone: '',
         customerEmail: '',

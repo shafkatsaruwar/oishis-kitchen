@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Power,
   ListTodo,
+  Store,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBanner from '@/components/OfflineBanner';
@@ -23,6 +24,7 @@ import OfflineBanner from '@/components/OfflineBanner';
 const SECTIONS = [
   { page: 'AdminPOS', label: 'Register', icon: LayoutGrid },
   { page: 'AdminOrders', label: 'Orders', icon: ClipboardList, badge: 'pendingOrders' },
+  { page: 'AdminWalkIns', label: 'Walk-ins', icon: Store },
   { page: 'AdminCalendar', label: 'Calendar', icon: CalendarDays },
   { page: 'AdminMenu', label: 'Menu', icon: UtensilsCrossed, badge: 'lowStock' },
   { page: 'AdminInventory', label: 'Inventory', icon: Boxes },
