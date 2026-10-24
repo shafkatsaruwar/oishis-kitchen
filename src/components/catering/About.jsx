@@ -21,7 +21,7 @@ export default function About() {
             transition={{ duration: 0.8 }}>
             <div className="overflow-hidden rounded-lg">
               <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/61d08c71d_BNKBQYC3QHPMWXO6ZNY7HHYZpngcopy.jpg"
+                src="/food/61d08c71d_BNKBQYC3QHPMWXO6ZNY7HHYZpngcopy.jpg"
                 alt="Bengali fried fish"
                 className="w-full h-[500px] object-cover"
               />

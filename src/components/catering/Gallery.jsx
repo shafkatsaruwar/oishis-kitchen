@@ -2,15 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const galleryImages = [
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/d5d0b5fb1_5IOR5RMMMTVTTKTFRC6FLD26.jpg', alt: 'Mixed vegetable curry' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/ab450272c_C2YYH2ZSWUCKMOPQSBJZ3LOV.jpg', alt: 'Chicken kebab with sauce' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/c05dcbfa4_DQPYGHREB66LKEYBCFERPD24.png', alt: 'Fried chicken' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/a49f75485_HLQDPOT6PCXNRHVIY6FVVJBB.jpg', alt: 'Rice with meat' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/4e453b89c_HPQF2SDOKP5LV6C6Y5VVLDF5.png', alt: 'Beef kebabs' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/0f86adc67_JMOOLHIEE6XLCF6RTLBRWHSR.jpg', alt: 'Chicken curry' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/d8cd7fc57_L6QLA4V4FQPHVOVTSBMJ377Z.jpg', alt: 'Grilled kebab skewers' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/344747704_SG6U4DMD7EFJ5325OPPAXJYQ.jpg', alt: 'Egg fried rice' },
-  { url: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69211206f425fc734b7ae971/b43fb7530_ZWXEYVPHVY6E4VYG35ZEHBYQ.png', alt: 'Bengali desserts' },
+  { url: '/food/d5d0b5fb1_5IOR5RMMMTVTTKTFRC6FLD26.jpg', alt: 'Mixed vegetable curry' },
+  { url: '/food/ab450272c_C2YYH2ZSWUCKMOPQSBJZ3LOV.jpg', alt: 'Chicken kebab with sauce' },
+  { url: '/food/c05dcbfa4_DQPYGHREB66LKEYBCFERPD24.png', alt: 'Fried chicken' },
+  { url: '/food/a49f75485_HLQDPOT6PCXNRHVIY6FVVJBB.jpg', alt: 'Rice with meat' },
+  { url: '/food/4e453b89c_HPQF2SDOKP5LV6C6Y5VVLDF5.png', alt: 'Beef kebabs' },
+  { url: '/food/0f86adc67_JMOOLHIEE6XLCF6RTLBRWHSR.jpg', alt: 'Chicken curry' },
+  { url: '/food/d8cd7fc57_L6QLA4V4FQPHVOVTSBMJ377Z.jpg', alt: 'Grilled kebab skewers' },
+  { url: '/food/344747704_SG6U4DMD7EFJ5325OPPAXJYQ.jpg', alt: 'Egg fried rice' },
+  { url: '/food/b43fb7530_ZWXEYVPHVY6E4VYG35ZEHBYQ.png', alt: 'Bengali desserts' },
 ];
 
 export default function Gallery() {
