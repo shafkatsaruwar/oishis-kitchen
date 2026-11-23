@@ -16,6 +16,8 @@ export default function EditOrderDialog({ order, isOpen, onClose, onSave, isSavi
   const [lines, setLines] = useState(() =>
     (order?.items || []).map((i) => ({ ...i, quantity: i.quantity || 1 }))
   );
+  const [pickupDate, setPickupDate] = useState(order?.pickup_date || '');
+  const [pickupTime, setPickupTime] = useState(order?.pickup_time || '');
   const [search, setSearch] = useState('');
   const [customName, setCustomName] = useState('');
   const [customPrice, setCustomPrice] = useState('');
@@ -107,6 +109,23 @@ export default function EditOrderDialog({ order, isOpen, onClose, onSave, isSavi
           </DialogTitle>
           <p className="text-sm text-gray-600">{order.customer_name}</p>
         </DialogHeader>
+
+        {/* Pickup date & time */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 mb-1">PICKUP</p>
+          <div className="flex gap-2">
+            <Input
+              type="date"
+              value={pickupDate}
+              onChange={(e) => setPickupDate(e.target.value)}
+            />
+            <Input
+              type="time"
+              value={pickupTime}
+              onChange={(e) => setPickupTime(e.target.value)}
+            />
+          </div>
+        </div>
 
         {/* Current lines */}
         <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
@@ -220,8 +239,8 @@ export default function EditOrderDialog({ order, isOpen, onClose, onSave, isSavi
         </div>
 
         <Button
-          onClick={() => onSave(lines)}
-          disabled={isSaving || lines.length === 0}
+          onClick={() => onSave(lines, { pickup_date: pickupDate, pickup_time: pickupTime })}
+          disabled={isSaving || lines.length === 0 || !pickupDate || !pickupTime}
           className="w-full bg-amber-500 hover:bg-amber-600 text-white"
         >
           {isSaving ? 'Saving…' : 'Save changes'}
