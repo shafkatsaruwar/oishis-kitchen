@@ -8,6 +8,7 @@ import { createPhoneOrder, TAX_RATE, round2 } from '@/lib/orderMutations';
 import { Minus, Plus, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import emailjs from '@emailjs/browser';
 
 const SPICE = ['No Spice', 'Mild', 'Medium', 'Spicy', 'Extra Hot'];
 const MIN_SERVINGS = 8;
@@ -190,6 +191,42 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
           ? `Order #${order.order_number} saved on this device. It will send when you are back online.`
           : `Order #${order.order_number} created`
       );
+
+      // Confirmation email (non-blocking) — skipped if there's no email on
+      // file, or if the order only queued locally and never reached the server.
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      if (!order._queued && order.customer_email && serviceId && templateId && publicKey) {
+        emailjs
+          .send(
+            serviceId,
+            templateId,
+            {
+              to_name: order.customer_name,
+              to_email: order.customer_email,
+              order_number: order.order_number,
+              pickup_date: order.pickup_date,
+              pickup_time: order.pickup_time,
+              total: `$${order.total.toFixed(2)}`,
+              items_list: order.items
+                .map((i) => `${i.quantity}x ${i.name} — $${(i.price * i.quantity).toFixed(2)}`)
+                .join('\n'),
+              payment_method:
+                order.payment_status === 'paid'
+                  ? `Paid via ${order.payment_method}`
+                  : 'Pay on Pickup (Cash / Venmo / Zelle)',
+              special_requests: order.special_requests || 'None',
+              track_url: `${window.location.origin}/TrackOrder?orderNumber=${order.order_number}`,
+              customer_name: order.customer_name,
+              customer_email: order.customer_email,
+              customer_phone: order.customer_phone,
+            },
+            publicKey
+          )
+          .catch((err) => console.error('Customer email failed:', err));
+      }
+
       onCreated?.();
       reset();
       onClose();
