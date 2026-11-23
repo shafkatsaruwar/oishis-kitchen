@@ -54,7 +54,7 @@ export function orderSubtotal(order) {
  * writes — so labels, invoices and receipts keep working on edited orders.
  * Tax follows the current rate (0 since 2026-08-16).
  */
-export const updateOrderItems = (order, items) => {
+export const updateOrderItems = (order, items, pickup) => {
   const subtotal = round2(items.reduce((sum, i) => sum + i.price * i.quantity, 0));
   const tax = round2(subtotal * TAX_RATE);
   return updateOrder(order.id, {
@@ -62,6 +62,7 @@ export const updateOrderItems = (order, items) => {
     subtotal,
     tax,
     total: round2(subtotal + tax),
+    ...pickup,
   });
 };
 

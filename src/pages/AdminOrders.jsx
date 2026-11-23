@@ -110,7 +110,7 @@ export default function AdminOrders() {
   });
 
   const editMutation = useMutation({
-    mutationFn: ({ order, items }) => updateOrderItems(order, items),
+    mutationFn: ({ order, items, pickup }) => updateOrderItems(order, items, pickup),
     onSuccess: () => {
       invalidateOrders();
       setEditOrder(null);
@@ -496,7 +496,7 @@ export default function AdminOrders() {
         isOpen={!!editOrder}
         onClose={() => setEditOrder(null)}
         isSaving={editMutation.isPending}
-        onSave={(items) => editMutation.mutate({ order: editOrder, items })}
+        onSave={(items, pickup) => editMutation.mutate({ order: editOrder, items, pickup })}
       />
 
       <PhoneOrderDialog
