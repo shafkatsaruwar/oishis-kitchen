@@ -30,3 +30,7 @@ dist-ssr
 .env
 .vercel
 .claude/skills/
+
+# Per-machine Reticle usage counters — churns on every run, not meant to be
+# shared. contract.json, flows/, baselines/ and capsules/ stay tracked.
+.reticle/impact.json

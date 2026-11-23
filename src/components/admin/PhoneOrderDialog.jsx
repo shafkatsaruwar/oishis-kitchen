@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { createPhoneOrder, TAX_RATE, round2 } from '@/lib/orderMutations';
+import { createPhoneOrder, sendOrderConfirmationEmail, TAX_RATE, round2 } from '@/lib/orderMutations';
 import { Minus, Plus, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -190,6 +190,13 @@ export default function PhoneOrderDialog({ isOpen, onClose, onCreated }) {
           ? `Order #${order.order_number} saved on this device. It will send when you are back online.`
           : `Order #${order.order_number} created`
       );
+
+      // Confirmation email (non-blocking) — skipped if there's no email on
+      // file, or if the order only queued locally and never reached the server.
+      if (!order._queued) {
+        sendOrderConfirmationEmail(order).catch((err) => console.error('Customer email failed:', err));
+      }
+
       onCreated?.();
       reset();
       onClose();
