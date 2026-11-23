@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { enqueueInsert, isNetworkError, isOnline, throwIfCannotWrite } from '@/lib/offline';
+import emailjs from '@emailjs/browser';
 
 /**
  * Every write here asks PostgREST for the updated row back and throws when
@@ -157,4 +158,48 @@ export async function createPhoneOrder({
     }
     throw error;
   }
+}
+
+/**
+ * The same confirmation email checkout sends, for an order that already
+ * exists — a phone order just taken, or a resend from the admin dashboard.
+ * Throws when there's no email on file or EmailJS isn't configured, so
+ * callers can toast the reason instead of failing silently.
+ */
+export async function sendOrderConfirmationEmail(order) {
+  const customerEmail = (order.customer_email || '').trim();
+  if (!customerEmail) throw new Error('This order has no email on file.');
+
+  const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+  const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+  if (!serviceId || !templateId || !publicKey) {
+    throw new Error('Email is not configured for this site.');
+  }
+
+  return emailjs.send(
+    serviceId,
+    templateId,
+    {
+      to_name: order.customer_name,
+      to_email: customerEmail,
+      order_number: order.order_number,
+      pickup_date: order.pickup_date,
+      pickup_time: order.pickup_time,
+      total: `$${Number(order.total).toFixed(2)}`,
+      items_list: (order.items || [])
+        .map((i) => `${i.quantity}x ${i.name} — $${(i.price * i.quantity).toFixed(2)}`)
+        .join('\n'),
+      payment_method:
+        order.payment_status === 'paid'
+          ? `Paid via ${order.payment_method}`
+          : 'Pay on Pickup (Cash / Venmo / Zelle)',
+      special_requests: order.special_requests || 'None',
+      track_url: `${window.location.origin}/TrackOrder?orderNumber=${order.order_number}`,
+      customer_name: order.customer_name,
+      customer_email: customerEmail,
+      customer_phone: order.customer_phone,
+    },
+    publicKey
+  );
 }

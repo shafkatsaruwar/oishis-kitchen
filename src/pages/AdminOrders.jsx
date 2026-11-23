@@ -11,7 +11,7 @@ import PaymentDialog from '../components/admin/PaymentDialog';
 import InvoiceDialog from '../components/admin/InvoiceDialog';
 import PhoneOrderDialog from '../components/admin/PhoneOrderDialog';
 import EditOrderDialog from '../components/admin/EditOrderDialog';
-import { recordPayment, reversePayment, setOrderFlags, setOrderTaxExempt, updateOrderItems } from '@/lib/orderMutations';
+import { recordPayment, reversePayment, sendOrderConfirmationEmail, setOrderFlags, setOrderTaxExempt, updateOrderItems } from '@/lib/orderMutations';
 import { isOnlineOrder } from '@/lib/orderSource';
 import { format } from 'date-fns';
 import OrderStatusBadge from '../components/ordering/OrderStatusBadge';
@@ -123,6 +123,12 @@ export default function AdminOrders() {
     mutationFn: ({ orderId, isTest, isVip }) => setOrderFlags(orderId, { isTest, isVip }),
     onSuccess: invalidateOrders,
     onError: (e) => toast.error(writeErrorMessage(e, 'Could not update tags')),
+  });
+
+  const emailMutation = useMutation({
+    mutationFn: (order) => sendOrderConfirmationEmail(order),
+    onSuccess: (_d, order) => toast.success(`Confirmation email sent to ${order.customer_email}`),
+    onError: (e) => toast.error(e.message || 'Could not send the email'),
   });
 
   const filteredOrders = orders?.filter(order => {
@@ -351,6 +357,16 @@ export default function AdminOrders() {
                     >
                       <FileText className="w-4 h-4 mr-1" />
                       {order.payment_status === 'paid' ? 'Receipt' : 'Invoice'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => emailMutation.mutate(order)}
+                      disabled={emailMutation.isPending}
+                      className="border-gray-300 text-gray-700"
+                    >
+                      <Mail className="w-4 h-4 mr-1" />
+                      Send Order Confirmation Email
                     </Button>
                     <Button
                       size="sm"
