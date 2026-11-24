@@ -7,6 +7,23 @@ import { supabase } from '@/lib/supabase';
 import { round2, TAX_RATE } from '@/lib/orderMutations';
 import { Minus, Plus, X } from 'lucide-react';
 
+const SPICE = ['No Spice', 'Mild', 'Medium', 'Spicy', 'Extra Hot'];
+// Lines carry spice inside special_instructions ("Spice Level: Mild"), which
+// labels and invoices print as-is, so edit it there rather than in a new field.
+const SPICE_RE = /Spice Level:\s*([^·\n]*[^·\s])/i;
+const spiceOf = (text) => text?.match(SPICE_RE)?.[1].trim() || '';
+const tidy = (text) => text.replace(/^[\s·]+|[\s·]+$/g, '');
+const withSpice = (text, level) => {
+  const current = text || '';
+  if (SPICE_RE.test(current)) {
+    return level
+      ? current.replace(SPICE_RE, `Spice Level: ${level}`)
+      : tidy(current.replace(SPICE_RE, ''));
+  }
+  if (!level) return current;
+  return current ? `Spice Level: ${level} · ${current}` : `Spice Level: ${level}`;
+};
+
 /**
  * Edits an order after it exists — change quantities, remove lines, add dishes
  * off the menu, or add a custom amount (any name and price; negative prices
@@ -133,10 +150,33 @@ export default function EditOrderDialog({ order, isOpen, onClose, onSave, isSavi
             <div key={`${line.name}-${idx}`} className="flex items-center gap-2 p-2.5">
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-gray-900 truncate">{line.name}</div>
-                <div className="text-xs text-gray-500 tabular-nums">
-                  ${line.price.toFixed(2)} ea
-                  {line.special_instructions && (
-                    <span className="italic"> · {line.special_instructions}</span>
+                <div className="text-xs text-gray-500 tabular-nums flex items-center gap-1 flex-wrap">
+                  <span>${line.price.toFixed(2)} ea ·</span>
+                  <select
+                    value={spiceOf(line.special_instructions)}
+                    onChange={(e) =>
+                      setLines((prev) =>
+                        prev.map((l, i) =>
+                          i === idx
+                            ? { ...l, special_instructions: withSpice(l.special_instructions, e.target.value) }
+                            : l
+                        )
+                      )
+                    }
+                    aria-label={`Spice level for ${line.name}`}
+                    className="bg-transparent italic text-gray-500 hover:text-gray-800 cursor-pointer"
+                  >
+                    <option value="">🌶 Spice not set</option>
+                    {SPICE.map((s) => (
+                      <option key={s} value={s}>
+                        🌶 {s}
+                      </option>
+                    ))}
+                  </select>
+                  {tidy((line.special_instructions || '').replace(SPICE_RE, '')) && (
+                    <span className="italic">
+                      · {tidy((line.special_instructions || '').replace(SPICE_RE, ''))}
+                    </span>
                   )}
                 </div>
               </div>
