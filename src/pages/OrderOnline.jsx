@@ -206,7 +206,9 @@ export default function OrderOnline() {
           name: row.name,
           description: row.description,
           price: row.price,
-          minQty: row.min_qty,
+          // A dish saved without a minimum still starts at 8 in the cart; whole
+          // trays ("Jorda (Half Tray)") sell one at a time, as on phone orders.
+          minQty: row.min_qty ?? (/tray/i.test(row.name) ? 1 : DEFAULT_MIN_QTY),
           spice: row.spice_level,
           options: row.options,
           trayOptions: row.tray_options,
